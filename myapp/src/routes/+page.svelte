@@ -22,7 +22,7 @@
 		</div>
 		<nav class="grid gap-3 sm:grid-cols-2">
 			<a
-				href="/boteinsatzgruppe"
+				href="/board"
 				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors"
 			>
 				<span class="font-display text-2xl font-600 uppercase block">Flotten Manager</span>

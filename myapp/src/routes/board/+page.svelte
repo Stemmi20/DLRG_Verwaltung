@@ -10,7 +10,7 @@
 	const settings = $derived({ ...defaultConfig, ...config });
 	let authenticated = $state(false);
 	function login(username: string, password: string): boolean {
-		const valid =
+		const valid = 
 			username.toLowerCase() === settings.username.toLowerCase() && password === settings.password;
 		if (valid) authenticated = true;
 		return valid;
@@ -23,4 +23,3 @@
 		initialVehicles={vehicles}
 		onlogout={() => (authenticated = false)}
 	/>{:else}<Login onlogin={login} />{/if}
-F
