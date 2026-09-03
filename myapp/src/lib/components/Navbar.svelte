@@ -13,7 +13,7 @@
 	const LINKS = [
 		{ pfad: '/', label: 'Start' },
 		{ pfad: '/boteinsatzgruppe', label: 'Einsatzgruppe' },
-		{ pfad: '/board', label: 'Board' },
+		{ pfad: '/fleetmanager', label: 'Fleetmanager' },
 		{ pfad: '/kfausb', label: 'Kraftfahrer' },
 	];
 

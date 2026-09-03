@@ -3,7 +3,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 import { sitzungPruefen } from '$lib/server/auth';
 
 // Alles unter diesen Pfaden erfordert eine Anmeldung
-const GESCHUETZT = ['/boteinsatzgruppe', '/admin', '/board', '/kfausb'];
+const GESCHUETZT = ['/boteinsatzgruppe', '/admin', '/fleetmanager', '/kfausb'];
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const sitzungsId = event.cookies.get('session');
