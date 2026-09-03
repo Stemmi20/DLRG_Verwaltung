@@ -13,8 +13,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.cookies.delete('session', { path: '/' });
 	}
 
-	// Einzige Quelle der Wahrheit: was hier landet, kommt aus der Datenbank -
-	// nicht aus einem Cookie, das der Browser setzen koennte.
+	// Quelle der Wahrheit: Die Benutzerdaten kommen aus der Datenbank.
 	event.locals.user = sitzung
 		? {
 				id: sitzung.benutzer._id.toString(),
@@ -28,14 +27,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.userId = event.locals.user?.id ?? null;
 
 	const pfad = event.url.pathname;
-	const brauchtAnmeldung = GESCHUETZT.some((p) => pfad === p || pfad.startsWith(p + '/'));
+	const brauchtAnmeldung = GESCHUETZT.some(
+		(p) => pfad === p || pfad.startsWith(p + '/')
+	);
 
 	if (brauchtAnmeldung && !event.locals.user) {
 		redirect(303, `/login?weiter=${encodeURIComponent(pfad)}`);
 	}
 
-	return resolve(event, {
-		transformPageChunk: ({ html }) =>
-			html.replace('%unocss-svelte-scoped.global%', 'unocss_svelte_scoped_global_styles')
-	});
+	// Wichtig: Die Anfrage muss weiter an SvelteKit übergeben werden.
+	return await resolve(event);
 };

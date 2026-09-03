@@ -40,11 +40,10 @@
 		<!-- Mitte: Begrüßung und Titel -->
 		<div class="min-w-0 flex-1 text-center">
 			{#if user}
-				<p class="truncate text-sm color-[rgb(255,237,0)]">
-					Hallo {user.vorname}
+				<p class="truncate font-semibold color-[rgb(255,237,0)]">
+					Hallo {user.vorname}, Wilkommen im DLRG Verwaltungsportal
 				</p>
 			{/if}
-			<p class="truncate font-semibold color-[rgb(255,237,0)]">DLRG Verwaltung</p>
 		</div>
 
 		<!-- Rechts: Abmelden und Menüknopf -->

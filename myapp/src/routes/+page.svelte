@@ -13,6 +13,22 @@
 	<div class="max-w-4xl mx-auto grid gap-6 ">
 
 			
+		<div class="lvs-panel p-4 grid gap-3 bg-lvs-rot">
+			<span>
+				<span class="font-display text-2xl font-600 uppercase block flex justify-center"
+					>Einsatz</span
+				>
+			</span>
+		</div>
+		<nav class="grid gap-3 sm:grid-cols-2">
+			<a
+				href="/boteinsatzgruppe"
+				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors"
+			>
+				<span class="font-display text-2xl font-600 uppercase block">Flotten Manager</span>
+				<span class="text-sm text-lvs-grau">Lokalisierung von Einstzfahrzeugen</span>
+				</a>
+		</nav>
 		<div class="lvs-panel p-4 grid gap-3 bg-lvs-wasser">
 			<span>
 				<span class="font-display text-2xl font-600 uppercase block flex justify-center"
