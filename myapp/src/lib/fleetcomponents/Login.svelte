@@ -1,11 +1,9 @@
 <script lang="ts">
 	const baseUrl = import.meta.env.BASE_URL;
 	let {
-		onlogin,
 		logoUrl = `${baseUrl}friedrichshafen.svg`,
 		heroUrl = `${baseUrl}login-fleetmap.png`,
 	}: {
-		onlogin: (username: string, password: string) => boolean;
 		logoUrl?: string;
 		heroUrl?: string;
 	} = $props();
@@ -15,7 +13,6 @@
 	let error = $state('');
 
 	function submit() {
-		error = onlogin(username.trim(), password) ? '' : 'Benutzername oder Passwort ist nicht korrekt.';
 		if (error) password = '';
 	}
 </script>

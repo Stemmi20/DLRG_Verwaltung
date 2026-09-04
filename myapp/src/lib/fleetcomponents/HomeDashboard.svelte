@@ -144,7 +144,6 @@
 	<div class="welcome">
 		<div>
 			<p>Fleetmap Dashboard</p>
-			<h1>Guten Tag, Administrator.</h1>
 			<span>Hier findest du den aktuellen Überblick über Fahrzeuge und Standortmeldungen.</span>
 		</div>
 	</div>

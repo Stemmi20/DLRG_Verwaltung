@@ -1,7 +1,7 @@
 import type { AppConfig, Vehicle } from './types';
 export const defaultConfig: AppConfig = {
-	username: 'Admin',
-	password: 'Test1234!',
+	username: '',
+	password: '',
 	brokerUrl: 'wss://broker.hivemq.com:8884/mqtt',
 	topic: 'tracker/tracker-01/position',
 	mapCenter: null,

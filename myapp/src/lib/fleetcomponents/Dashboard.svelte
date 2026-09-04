@@ -28,8 +28,7 @@
 	let {
 		config,
 		initialVehicles,
-		onlogout,
-	}: { config: AppConfig; initialVehicles: Vehicle[]; onlogout: () => void } = $props();
+	}: { config: AppConfig; initialVehicles: Vehicle[] } = $props();
 	let vehicles = $state<Vehicle[]>(untrack(() => initialVehicles.map((v) => ({ ...v }))));
 	let selectedId = $state(untrack(() => initialVehicles[0]?.id ?? ''));
 	let connection = $state<ConnectionStatus>('connecting'),
@@ -377,18 +376,6 @@
 				if (event.target === event.currentTarget) showLogoutConfirm = false;
 			}}
 		>
-			<div class="logout-dialog" role="alertdialog" aria-modal="true" aria-labelledby="logout-title">
-				<div class="logout-icon">↪</div>
-				<p>Sitzung beenden</p>
-				<h2 id="logout-title">Wirklich abmelden?</h2>
-				<span>Du wirst von der Fahrzeugortung abgemeldet und zur Startseite zurückgeleitet.</span>
-				<div>
-					<button onclick={() => (showLogoutConfirm = false)}>Abbrechen</button><button
-						class="confirm"
-						onclick={onlogout}>Ja, abmelden</button
-					>
-				</div>
-			</div>
 		</div>
 	{/if}
 </main>
