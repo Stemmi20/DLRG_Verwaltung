@@ -304,7 +304,7 @@
 								mapSheetOpen = false;
 							}}
 							><div class="row">
-								<i>▰</i><span>
+								<i><img src="/PB3941.ico" alt="Hugo Eckener" style="height: 35px; width: 35px;"/></i><span>
 								<strong>{vehicle.name}</strong>
 								<small>{vehicle.callSign}</small></span><em
 									class={vehicle.status}>{vehicle.label}</em

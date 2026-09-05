@@ -28,8 +28,8 @@
 	function icon(v: Vehicle) {
 		return L.divIcon({
 			className: '',
-			html: `<div class="pin ${v.status}"><span>▰</span></div>`,
-			iconSize: [36, 36],
+			html: `<div class="${v.status}"><span><img src="/PB3941.ico" alt="Hugo Eckener" style="height: 75px; width: 75px;"/></span></div>`,
+			iconSize: [55, 55],
 			iconAnchor: [18, 34],
 		});
 	}
