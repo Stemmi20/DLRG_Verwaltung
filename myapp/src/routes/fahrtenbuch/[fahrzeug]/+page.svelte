@@ -11,6 +11,7 @@
 	let strecke = $state<string[]>(['', '']);
 	let kmStart = $state(String(data.kmStand));
 	let kmEnde = $state('');
+	let kraftstoff = $state('');
 	let bemerkung = $state('');
 	let gewaehlt = $state<string[]>([]);
 	let suche = $state('');
@@ -23,6 +24,7 @@
 		fahrtgrund = form.werte.fahrtgrund ?? fahrtgrund;
 		kmStart = form.werte.kmStart ?? kmStart;
 		kmEnde = form.werte.kmEnde ?? kmEnde;
+		kraftstoff = form.werte.kraftstoff ?? kraftstoff;
 		bemerkung = form.werte.bemerkung ?? bemerkung;
 		if (form.strecke?.length) strecke = [...form.strecke];
 		if (form.mitfahrerIds) gewaehlt = [...form.mitfahrerIds];
@@ -36,6 +38,7 @@
 		strecke = ['', ''];
 		kmStart = String(data.kmStand);
 		kmEnde = '';
+		kraftstoff = '';
 		bemerkung = '';
 		gewaehlt = [];
 	});
@@ -172,6 +175,20 @@
 				</label>
 			</div>
 
+			<label>
+				Kraftstoff in %
+				<input
+					type="number"
+					name="kraftstoff"
+					bind:value={kraftstoff}
+					min="0"
+					max="100"
+					step="1"
+					required
+				/>
+				{#if form?.felder?.kraftstoff}<em>{form.felder.kraftstoff}</em>{/if}
+			</label>
+
 			<div class="mitfahrer">
 				<span class="beschriftung">
 					Mitfahrer
@@ -228,6 +245,9 @@
 								<span>{datumText(f.datum)}</span>
 								<span>{f.fahrerName}</span>
 								<span>{f.kmStart.toLocaleString('de-DE')} → {f.kmEnde.toLocaleString('de-DE')} km</span>
+								<span class="tank" class:leerer-tank={f.kraftstoff <= 25}>
+									Tank {f.kraftstoff} %
+								</span>
 							</div>
 							{#if f.mitfahrer.length}
 								<div class="crew">
@@ -506,6 +526,10 @@
 		gap: 12px;
 		color: #888;
 		font-size: 9px;
+	}
+	.tank.leerer-tank {
+		color: #e30613;
+		font-weight: 700;
 	}
 	.crew,
 	.bemerkung {

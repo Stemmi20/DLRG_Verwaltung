@@ -68,6 +68,7 @@ export async function fahrten(fahrzeugId: string, anzahl = 50) {
 		fahrerName: f.fahrerName,
 		kmStart: f.kmStart,
 		kmEnde: f.kmEnde,
+		kraftstoff: f.kraftstoff,
 		// Nicht gespeichert, sondern berechnet – so kann die Differenz
 		// nie von den Kilometerständen abweichen.
 		gefahren: f.kmEnde - f.kmStart,
@@ -85,6 +86,7 @@ export interface FahrtEingabe {
 	fahrerName: string;
 	kmStart: number;
 	kmEnde: number;
+	kraftstoff: number;
 	bemerkung: string | null;
 	mitfahrer: { userId: string; name: string }[];
 }

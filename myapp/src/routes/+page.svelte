@@ -38,6 +38,13 @@
 		</div>
 		<nav class="grid gap-3 sm:grid-cols-2">
 			<a
+				href="/fahrtenbuch"
+				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors"
+			>
+				<span class="font-display text-2xl font-600 uppercase block">Fahrtenbuch</span>
+				<span class="text-sm text-lvs-grau">Verwaltung von Fahrten und Kilometerständen</span>
+			</a>
+			<a
 				href="/boteinsatzgruppe"
 				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors"
 			>

@@ -53,19 +53,36 @@ export const actions: Actions = {
 		if (!wert('fahrtgrund')) felder.fahrtgrund = 'Bitte den Fahrtgrund eintragen.';
 		if (strecke.length < 2) felder.strecke = 'Bitte mindestens Start und Ziel eintragen.';
 
-		const kmStart = Number(wert('kmStart'));
-		const kmEnde = Number(wert('kmEnde'));
+		// Achtung: Number('') ist 0. Ohne die Leerprüfung würde ein leeres
+		// Feld serverseitig als gültige 0 durchgehen – required greift nur
+		// im Browser.
+		const kmStartRoh = wert('kmStart');
+		const kmEndeRoh = wert('kmEnde');
+		const kmStart = Number(kmStartRoh);
+		const kmEnde = Number(kmEndeRoh);
 
-		if (!Number.isInteger(kmStart) || kmStart < 0) {
+		if (kmStartRoh === '' || !Number.isInteger(kmStart) || kmStart < 0) {
 			felder.kmStart = 'Bitte einen gültigen Kilometerstand eintragen.';
 		}
-		if (!Number.isInteger(kmEnde) || kmEnde < 0) {
+		if (kmEndeRoh === '' || !Number.isInteger(kmEnde) || kmEnde < 0) {
 			felder.kmEnde = 'Bitte einen gültigen Kilometerstand eintragen.';
 		} else if (Number.isInteger(kmStart) && kmEnde < kmStart) {
 			felder.kmEnde = 'Der Endstand liegt unter dem Startstand.';
 		} else if (Number.isInteger(kmStart) && kmEnde - kmStart > 2000) {
 			// Ein Zahlendreher fällt sonst erst auf, wenn die Statistik nicht stimmt.
 			felder.kmEnde = 'Über 2.000 km in einer Fahrt – bitte prüfen.';
+		}
+
+		const kraftstoffRoh = wert('kraftstoff');
+		const kraftstoff = Number(kraftstoffRoh);
+
+		if (
+			kraftstoffRoh === '' ||
+			!Number.isInteger(kraftstoff) ||
+			kraftstoff < 0 ||
+			kraftstoff > 100
+		) {
+			felder.kraftstoff = 'Bitte einen Wert zwischen 0 und 100 eintragen.';
 		}
 
 		// Fahrer zählt mit: bei 5 Sitzplätzen sind 4 Mitfahrer möglich.
@@ -96,6 +113,7 @@ export const actions: Actions = {
 			fahrerName: `${locals.user.vorname} ${locals.user.nachname}`.trim(),
 			kmStart,
 			kmEnde,
+			kraftstoff,
 			bemerkung: wert('bemerkung') || null,
 			mitfahrer: mitfahrerIds
 				.filter((id) => nachId.has(id))

@@ -39,6 +39,8 @@ model fahrt {
     kmStart Int
     kmEnde  Int
 
+    kraftstoff Int @default(0)
+
     bemerkung  String?
     angelegtAm DateTime @default(now())
 
