@@ -1,4 +1,4 @@
-<!-- <script lang="ts">
+<script lang="ts">
 	import type { Snippet } from 'svelte';
 
     const baseUrl = import.meta.env.BASE_URL;
@@ -17,4 +17,4 @@
 	alt="DLRG Friedrichshafen Fleetmap"
 />
 
-{@render children()} -->
+{@render children()}
