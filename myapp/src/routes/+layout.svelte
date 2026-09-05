@@ -7,7 +7,7 @@
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	const OHNE_NAVIGATION = ['/minecraft', '/login'];
+	const OHNE_NAVIGATION = ['/login'];
 
 	const navZeigen = $derived(!OHNE_NAVIGATION.includes($page.url.pathname));
 </script>
