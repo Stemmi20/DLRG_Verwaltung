@@ -30,14 +30,14 @@
 	const missionCount = $derived(vehicles.filter((vehicle) => vehicle.status === 'mission').length);
 	const offlineCount = $derived(vehicles.filter((vehicle) => vehicle.status === 'offline').length);
 	const statusOptions = [
-		{ value: 'available', label: 'Verfügbar' },
+		{ value: 'available', label: 'Einsatzbereit auf der Wache' },
 		{ value: 'mission', label: 'Im Einsatz' },
 		{ value: 'out-of-service', label: 'Außer Dienst' },
 		{ value: 'workshop', label: 'Werkstatt' },
 		{ value: 'no-gps', label: 'Kein GPS-Signal' },
 	];
 	function statusLabel(value: string | undefined): string {
-		return statusOptions.find((option) => option.value === value)?.label ?? 'Verfügbar';
+		return statusOptions.find((option) => option.value === value)?.label ?? 'Einsatzbereit auf der Wache';
 	}
 	function statusCount(value: string): number {
 		return vehicles.filter((vehicle) => (vehicle.serviceStatus ?? 'available') === value).length;
@@ -70,7 +70,7 @@
 			if (['out-of-service', 'workshop', 'no-gps'].includes(vehicle.serviceStatus))
 				alerts.push({
 					vehicleId: vehicle.id,
-					vehicle: vehicle.name,
+					// vehicle: vehicle.name,
 					title: statusLabel(vehicle.serviceStatus),
 					detail: 'Betriebsstatus prüfen',
 					severity: vehicle.serviceStatus === 'out-of-service' ? 'critical' : 'warning',
@@ -79,7 +79,7 @@
 				if (item.state === 'missing' || item.state === 'defective')
 					alerts.push({
 						vehicleId: vehicle.id,
-						vehicle: vehicle.name,
+						// vehicle: vehicle.name,
 						title: `${item.name}: ${item.state === 'missing' ? 'fehlt' : 'defekt'}`,
 						detail: `Beladung · ${item.category ?? 'Allgemein'}`,
 						severity: 'critical',
@@ -87,7 +87,7 @@
 				if (item.expiry && dayDistance(item.expiry) <= 30)
 					alerts.push({
 						vehicleId: vehicle.id,
-						vehicle: vehicle.name,
+						// vehicle: vehicle.name,
 						title: `${item.name}: Ablaufdatum`,
 						detail:
 							dayDistance(item.expiry) < 0
@@ -100,11 +100,13 @@
 				const date = vehicle.maintenance?.[field];
 				if (!date) continue;
 				const days = dayDistance(date);
-				appointments.push({ vehicleId: vehicle.id, vehicle: vehicle.name, title, date, days });
+				appointments.push({ vehicleId: vehicle.id, vehicle: 
+					// vehicle.name, 
+					title, date, days });
 				if (days <= 30)
 					alerts.push({
 						vehicleId: vehicle.id,
-						vehicle: vehicle.name,
+						// vehicle: vehicle.name,
 						title,
 						detail: days < 0 ? `Seit ${Math.abs(days)} Tagen überfällig` : `In ${days} Tagen fällig`,
 						severity: days < 0 ? 'critical' : 'warning',
@@ -115,7 +117,7 @@
 				const days = dayDistance(entry.date);
 				appointments.push({
 					vehicleId: vehicle.id,
-					vehicle: vehicle.name,
+					// vehicle: vehicle.name,
 					title: entry.type,
 					date: entry.date,
 					days,
@@ -123,7 +125,7 @@
 				if (days <= 30)
 					alerts.push({
 						vehicleId: vehicle.id,
-						vehicle: vehicle.name,
+						// vehicle: vehicle.name,
 						title: entry.type,
 						detail: days < 0 ? `Seit ${Math.abs(days)} Tagen überfällig` : `In ${days} Tagen fällig`,
 						severity: days < 0 ? 'critical' : 'warning',
@@ -200,11 +202,15 @@
 				{#each vehicles as vehicle}
 					<button onclick={() => onmanage(vehicle.id)}>
 						<i class="vehicle-symbol"><AppIcon name="vehicle" size={19} /></i>
-						<span class="vehicle-title"
+						<!-- <span class="vehicle-title"
 							><strong>{vehicle.name}</strong><small>{vehicle.callSign}</small></span
+						> -->
+						<span class="vehicle-title"
+							><strong>{vehicle.callSign}</strong><small>{vehicle.callSign}</small></span
 						>
-						<span class="vehicle-update"
-							><small>Letzte Aktualisierung</small><strong>{vehicle.updated}</strong></span
+						<span class="vehicle-update">
+							<small>Letzte Aktualisierung</small>
+							<strong>{vehicle.updated}</strong></span
 						>
 						<em class={vehicle.serviceStatus ?? 'available'}>{statusLabel(vehicle.serviceStatus)}</em><b
 							>›</b
@@ -226,7 +232,7 @@
 		</aside>
 	</div>
 
-	<div class="insight-grid">
+	<!-- <div class="insight-grid">
 		<section class="insight-panel alert-panel">
 			<header>
 				<div>
@@ -288,7 +294,7 @@
 					>{/each}
 			</div>
 		</section>
-	</div>
+	</div> -->
 
 	{#if selectedVehicle}
 		<div
@@ -308,7 +314,7 @@
 					<div class="modal-icon"><AppIcon name="vehicle" size={27} /></div>
 					<div>
 						<small>Fahrzeugdetails</small>
-						<h2 id="vehicle-dialog-title">{selectedVehicle.name}</h2>
+						<!-- <h2 id="vehicle-dialog-title">{selectedVehicle.name}</h2> -->
 						<span>{selectedVehicle.callSign}</span>
 					</div>
 					<button aria-label="Fenster schließen" onclick={() => (selectedVehicle = null)}>×</button>

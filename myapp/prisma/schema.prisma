@@ -1,0 +1,60 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+/// Die Fahrzeuge der Ortsgruppe. Die Sitzplatzzahl begrenzt, wie viele
+/// Personen in eine Fahrt eingetragen werden können (Fahrer eingerechnet).
+model fahrzeug {
+    id          String  @id // Slug für die URL, z. B. "adler-3-19-1"
+    funkrufname String  @unique
+    sitzplaetze Int
+    aktiv       Boolean @default(true)
+
+    fahrten fahrt[]
+}
+
+model fahrt {
+    id         Int      @id @default(autoincrement())
+    fahrzeugId String
+    fahrzeug   fahrzeug @relation(fields: [fahrzeugId], references: [id])
+
+    datum      DateTime
+    fahrtgrund String
+
+    /// Stationen der Strecke in Reihenfolge, z. B.
+    /// ["Wache Seestraße", "Uferpromenade", "Wache Seestraße"].
+    /// Postgres erhält die Reihenfolge des Arrays.
+    strecke String[]
+
+    /// Der Fahrer ist der angemeldete Benutzer. Die Mongo-ObjectId wird als
+    /// String abgelegt, der Name zusätzlich – so bleibt das Fahrtenbuch
+    /// lesbar, auch wenn der Mitgliedsdatensatz später verschwindet.
+    fahrerId   String
+    fahrerName String
+
+    kmStart Int
+    kmEnde  Int
+
+    bemerkung  String?
+    angelegtAm DateTime @default(now())
+
+    mitfahrer mitfahrer[]
+
+    // Häufigste Abfrage: die Fahrten eines Fahrzeugs, neueste zuerst.
+    @@index([fahrzeugId, datum])
+}
+
+model mitfahrer {
+    id      Int   @id @default(autoincrement())
+    fahrtId Int
+    fahrt   fahrt @relation(fields: [fahrtId], references: [id], onDelete: Cascade)
+
+    userId String
+    name   String
+
+    @@unique([fahrtId, userId])
+}

@@ -12,8 +12,8 @@ export const appConfig: AppConfig = {
 export const defaultVehicles: Vehicle[] = [
 	{
 		id: 'fahrzeug-1',
-		name: 'Fahrzeug 1',
-		callSign: 'Pelikan Friedrichshafen 1/83/1',
+		// name: 'Fahrzeug 1',
+		callSign: 'Pelikan Bodensee 1/11/1',
 		status: 'offline',
 		label: 'Offline',
 		address: 'Noch keine Position empfangen',

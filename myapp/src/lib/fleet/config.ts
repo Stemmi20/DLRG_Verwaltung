@@ -10,7 +10,7 @@ export const defaultConfig: AppConfig = {
 export const initialVehicles: Vehicle[] = [
 	{
 		id: 'tracker-01',
-		name: 'Tracker 01',
+		// name: 'Tracker 01',
 		callSign: 'MQTT · tracker-01',
 		status: 'offline',
 		label: 'Warte auf Signal',

@@ -305,7 +305,9 @@
 								mapSheetOpen = false;
 							}}
 							><div class="row">
-								<i>▰</i><span><strong>{vehicle.name}</strong><small>{vehicle.callSign}</small></span><em
+								<i>▰</i><span>
+								<!-- <strong>{vehicle.name}</strong> -->
+								<small>{vehicle.callSign}</small></span><em
 									class={vehicle.status}>{vehicle.label}</em
 								>
 							</div>
@@ -328,7 +330,7 @@
 					><small>{Math.max(0, routePoints.length - 1)} Bewegungsabschnitte erfasst</small>
 				</div>
 				<div class="legend">
-					<span>● Verfügbar</span><span>● Im Einsatz</span><span>● Offline</span>
+					<span>● Einsatzbereit auf der Wache</span><span>● Im Einsatz</span><span>● Offline</span>
 				</div>
 			</aside>
 			<div class="map-shell">

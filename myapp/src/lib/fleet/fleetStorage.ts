@@ -31,7 +31,7 @@ export function saveVehicleData(vehicles: Vehicle[]): void {
 			vehicles.map((vehicle) => [
 				vehicle.id,
 				{
-					name: vehicle.name,
+					// name: vehicle.name,
 					callSign: vehicle.callSign,
 					serviceStatus: vehicle.serviceStatus ?? 'available',
 					loadout: vehicle.loadout ?? [],

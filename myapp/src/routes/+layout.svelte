@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/stores';	
+	import 'virtual:uno.css';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import Navbar from '$lib/components/Navbar.svelte';

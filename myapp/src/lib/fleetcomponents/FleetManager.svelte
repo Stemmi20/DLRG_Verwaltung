@@ -28,7 +28,7 @@
 	let currentId = $state(untrack(() => selectedId || vehicles[0]?.id || ''));
 	let draft = $state<VehicleChanges>({
 		id: '',
-		name: '',
+		// name: '',
 		callSign: '',
 		serviceStatus: 'available',
 		loadout: [],
@@ -57,14 +57,14 @@
 	let appointmentNote = $state('');
 	let saved = $state(false);
 	const statusOptions: { value: ServiceStatus; label: string }[] = [
-		{ value: 'available', label: 'Verfügbar' },
+		{ value: 'available', label: 'Einsatzbereit auf der Wache' },
 		{ value: 'mission', label: 'Im Einsatz' },
 		{ value: 'out-of-service', label: 'Außer Dienst' },
 		{ value: 'workshop', label: 'Werkstatt' },
 		{ value: 'no-gps', label: 'Kein GPS-Signal' },
 	];
 	function statusLabel(value: ServiceStatus): string {
-		return statusOptions.find((option) => option.value === value)?.label ?? 'Verfügbar';
+		return statusOptions.find((option) => option.value === value)?.label ?? 'Einsatzbereit auf der Wache';
 	}
 	function dueState(date: string): 'none' | 'overdue' | 'soon' | 'ok' {
 		if (!date) return 'none';
@@ -106,7 +106,7 @@
 		currentId = item.id;
 		draft = {
 			id: item.id,
-			name: item.name,
+			// name: item.name,
 			callSign: item.callSign,
 			serviceStatus: item.serviceStatus ?? 'available',
 			loadout: ((item.loadout ?? []) as Array<LoadoutItem | string>).map((entry) =>
@@ -191,9 +191,9 @@
 				<small>Fahrzeugliste</small><strong>{vehicles.length} Fahrzeuge</strong>
 			</div>
 			{#each vehicles as item}<button class:active={item.id === currentId} onclick={() => edit(item)}
-					><i><AppIcon name="vehicle" size={19} /></i><span
-						><strong>{item.name}</strong><small>{item.callSign}</small></span
-					><em class={item.serviceStatus}>{statusLabel(item.serviceStatus)}</em></button
+					><i><AppIcon name="vehicle" size={19} /></i>
+						<!-- <span><strong>{item.name}</strong><small>{item.callSign}</small></span> -->
+					<em class={item.serviceStatus}>{statusLabel(item.serviceStatus)}</em></button
 				>{/each}
 		</aside>
 		{#if draft}
@@ -207,9 +207,8 @@
 						</div>
 					</div>
 					<div class="fields">
+						<!-- <label>Name<input bind:value={draft.name} placeholder="z. B. Gerätewagen Wasserrettung" /></label> -->
 						<label
-							>Name<input bind:value={draft.name} placeholder="z. B. Gerätewagen Wasserrettung" /></label
-						><label
 							>Rufkennung / Kennung<input
 								bind:value={draft.callSign}
 								placeholder="z. B. Pelikan 1/59"
@@ -221,6 +220,35 @@
 							></label
 						>
 					</div>
+				</section>
+				<section class="card route-card">
+					<div class="card-head">
+						<i><AppIcon name="route" /></i>
+						<div>
+							<small>GPS-Historie</small>
+							<h2>Standorte der letzten 24 Stunden</h2>
+						</div>
+					</div>
+					<div class="route-stats">
+						<div><small>GPS-Punkte</small><strong>{routePoints.length}</strong></div>
+						<div><small>Strecke</small><strong>{(routeDistance / 1000).toFixed(2)} km</strong></div>
+						<div><small>Erster Punkt</small><strong>{routeStart}</strong></div>
+						<div><small>Letzter Punkt</small><strong>{routeEnd}</strong></div>
+					</div>
+					<div class="route-actions">
+						<button disabled={!Number.isFinite(vehicle?.lat)} onclick={() => onopenmap(currentId)}
+							><AppIcon name="location" size={18} /> Aktuellen Standort öffnen</button
+						><button
+							class="primary"
+							disabled={routePoints.length < 2}
+							onclick={() => onshowroute(currentId)}
+							><AppIcon name="route" size={18} /> 24h-Route auf Karte</button
+						>
+					</div>
+					<p class="hint">
+						Die Historie wird auf diesem Gerät beim Empfang von GPS-Meldungen gespeichert und automatisch
+						nach 24 Stunden entfernt.
+					</p>
 				</section>
 				<section class="card loadout-card">
 					<div class="card-head">
@@ -277,7 +305,8 @@
 							</div>{/each}
 					</div>
 				</section>
-				<section class="card">
+				
+				<!-- <section class="card">
 					<div class="card-head">
 						<i><AppIcon name="crew" /></i>
 						<div>
@@ -307,8 +336,8 @@
 								>
 							</div>{/each}
 					</div>
-				</section>
-				<section class="card maintenance-card">
+				</section> -->
+				<!-- <section class="card maintenance-card">
 					<div class="card-head">
 						<i><AppIcon name="calendar" /></i>
 						<div>
@@ -373,36 +402,8 @@
 								>
 							</article>{/each}
 					</div>
-				</section>
-				<section class="card route-card">
-					<div class="card-head">
-						<i><AppIcon name="route" /></i>
-						<div>
-							<small>GPS-Historie</small>
-							<h2>Standorte der letzten 24 Stunden</h2>
-						</div>
-					</div>
-					<div class="route-stats">
-						<div><small>GPS-Punkte</small><strong>{routePoints.length}</strong></div>
-						<div><small>Strecke</small><strong>{(routeDistance / 1000).toFixed(2)} km</strong></div>
-						<div><small>Erster Punkt</small><strong>{routeStart}</strong></div>
-						<div><small>Letzter Punkt</small><strong>{routeEnd}</strong></div>
-					</div>
-					<div class="route-actions">
-						<button disabled={!Number.isFinite(vehicle?.lat)} onclick={() => onopenmap(currentId)}
-							><AppIcon name="location" size={18} /> Aktuellen Standort öffnen</button
-						><button
-							class="primary"
-							disabled={routePoints.length < 2}
-							onclick={() => onshowroute(currentId)}
-							><AppIcon name="route" size={18} /> 24h-Route auf Karte</button
-						>
-					</div>
-					<p class="hint">
-						Die Historie wird auf diesem Gerät beim Empfang von GPS-Meldungen gespeichert und automatisch
-						nach 24 Stunden entfernt.
-					</p>
-				</section>
+				</section> -->
+				
 				<div class="savebar">
 					<span class:visible={saved || dirty}
 						>{saved ? '✓ Änderungen gespeichert' : dirty ? '● Ungespeicherte Änderungen' : ''}</span

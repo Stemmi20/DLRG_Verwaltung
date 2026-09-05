@@ -44,7 +44,7 @@ export interface Appointment {
 
 export interface Vehicle {
 	id: string;
-	name: string;
+	// name: string;
 	callSign: string;
 	status: TrackerStatus;
 	label: string;
@@ -63,7 +63,7 @@ export interface Vehicle {
 export type VehicleChanges = Pick<
 	Vehicle,
 	| 'id'
-	| 'name'
+	// | 'name'
 	| 'callSign'
 	| 'serviceStatus'
 	| 'loadout'
