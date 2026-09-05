@@ -117,6 +117,8 @@
 				? v
 				: {
 						...v,
+						// Fehlt der Name in einer Meldung, bleibt der bisherige stehen.
+						name: p.name ?? v.name,
 						lat: p.lat,
 						lng: p.lng,
 						status: 'available',
@@ -303,7 +305,7 @@
 							}}
 							><div class="row">
 								<i>▰</i><span>
-								<!-- <strong>{vehicle.name}</strong> -->
+								<strong>{vehicle.name}</strong>
 								<small>{vehicle.callSign}</small></span><em
 									class={vehicle.status}>{vehicle.label}</em
 								>

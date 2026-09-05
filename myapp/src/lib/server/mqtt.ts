@@ -7,6 +7,7 @@ import {
 	type TrackerEvent,
 	type TrackerNutzlast
 } from '$lib/types/tracker';
+import { gespeicherteFahrzeuge, positionSpeichern } from './trackerspeicher';
 
 /**
  * MQTT-Anbindung für die Fahrzeugkarte.
@@ -15,6 +16,9 @@ import {
  * Position per SSE an die Browser weiter. Der Umweg über den Server ist nötig,
  * weil ein Browser nur WebSocket kann – und er hält die Zugangsdaten aus dem
  * Client heraus, falls du später auf einen eigenen Broker mit Passwort gehst.
+ *
+ * Zusätzlich wandert jede gültige Meldung nach Postgres, siehe
+ * `trackerspeicher.ts`.
  */
 
 const BROKER = 'mqtt://broker.hivemq.com:1883';
@@ -37,6 +41,16 @@ const G = globalThis as typeof globalThis & { __lvsMqtt?: MqttClient };
 
 export function starteMqtt(): void {
 	if (G.__lvsMqtt) return;
+
+	// Nach einem Neustart wäre die Karte sonst leer, bis der erste Tracker
+	// wieder sendet. Nur Einträge übernehmen, zu denen noch nichts im
+	// Speicher steht – eine frisch empfangene Position ist immer besser.
+	gespeicherteFahrzeuge()
+		.then((liste) => {
+			for (const f of liste) if (!fahrzeuge.has(f.id)) fahrzeuge.set(f.id, f);
+			console.log('[mqtt] vorbelegt aus der Datenbank:', liste.length);
+		})
+		.catch((fehler) => console.error('[mqtt] Vorbelegung fehlgeschlagen', fehler));
 
 	const client = mqtt.connect(BROKER, {
 		clientId: `dlrg-board-${Math.random().toString(16).slice(2, 10)}`,
@@ -100,6 +114,19 @@ function verarbeite(topic: string, text: string): void {
 
 	fahrzeuge.set(id, fahrzeug);
 	bus.emit('tracker', { art: 'position', fahrzeug } satisfies TrackerEvent);
+
+	// Bewusst nicht abgewartet: die Karte soll nicht auf Postgres warten.
+	// Das .catch ist Pflicht – eine unbehandelte Rejection beendet Node.
+	positionSpeichern({
+		id,
+		name: fahrzeug.name,
+		lat: position.lat,
+		lng: position.lng,
+		speed: position.speed,
+		course: position.course,
+		sats: fahrzeug.sats,
+		batt: fahrzeug.batt
+	}).catch((fehler) => console.error('[mqtt] Position nicht gespeichert', fehler));
 }
 
 export function alleFahrzeuge(): Fahrzeug[] {

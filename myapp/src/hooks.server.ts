@@ -1,6 +1,11 @@
 // src/hooks.server.ts
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sitzungPruefen } from '$lib/server/auth';
+import { starteMqtt } from '$lib/server/mqtt';
+
+// Beim Start der Serverinstanz, nicht erst beim ersten Kartenaufruf: sonst
+// wird nur aufgezeichnet, solange irgendwo ein Browser die Karte offen hat.
+starteMqtt();
 
 // Alles unter diesen Pfaden erfordert eine Anmeldung
 const GESCHUETZT = [

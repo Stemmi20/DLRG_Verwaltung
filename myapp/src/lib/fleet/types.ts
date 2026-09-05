@@ -13,6 +13,8 @@ export interface RoutePoint {
 export interface ParsedPosition {
 	lat: number;
 	lng: number;
+	/** Aus der MQTT-Nutzlast, fehlt bei reinen Koordinaten-Meldungen. */
+	name?: string;
 	speed?: unknown;
 	timestamp?: string | number;
 }
@@ -44,7 +46,8 @@ export interface Appointment {
 
 export interface Vehicle {
 	id: string;
-	// name: string;
+	/** Kommt live vom Tracker und wird nicht von Hand gepflegt. */
+	name: string;
 	callSign: string;
 	status: TrackerStatus;
 	label: string;

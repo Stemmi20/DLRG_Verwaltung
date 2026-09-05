@@ -1,19 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { DATABASE_URL } from '$env/static/private';
 import { col } from './database';
+import { prisma } from './prisma';
 
-/*
- * Vite lädt Servermodule bei jeder Änderung neu – ohne den Umweg über
- * globalThis entstünde im Dev-Betrieb mit jedem Speichern ein neuer Pool.
- */
-const G = globalThis as typeof globalThis & { __prisma?: PrismaClient };
-
-export const prisma =
-	G.__prisma ??
-	new PrismaClient({ adapter: new PrismaPg({ connectionString: DATABASE_URL }) });
-
-if (import.meta.env.DEV) G.__prisma = prisma;
+// Weiter exportiert, damit bestehende Importe aus diesem Modul nicht brechen.
+export { prisma };
 
 // ────────────────────────────────────────────────────────────── Fahrzeuge
 

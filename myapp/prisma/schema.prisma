@@ -15,6 +15,7 @@ model fahrzeug {
     aktiv       Boolean @default(true)
 
     fahrten fahrt[]
+    tracker tracker[]
 }
 
 model fahrt {
@@ -39,7 +40,7 @@ model fahrt {
     kmStart Int
     kmEnde  Int
 
-    kraftstoff Int @default(0)
+    kraftstoff Int
 
     bemerkung  String?
     angelegtAm DateTime @default(now())
@@ -59,4 +60,53 @@ model mitfahrer {
     name   String
 
     @@unique([fahrtId, userId])
+}
+
+/// Ein GPS-Sender. Die id kommt aus dem MQTT-Topic: tracker/<id>/position
+model tracker {
+    id    String  @id
+    /// Der Name aus der MQTT-Nutzlast, z. B. "Fahrzeug 1".
+    name  String
+    aktiv Boolean @default(true)
+
+    /// Optionale Verknüpfung mit dem Fuhrpark. Damit kann die Karte später
+    /// den Funkrufnamen zeigen statt "Fahrzeug 1" – bis dahin bleibt es leer.
+    fahrzeugId String?
+    fahrzeug   fahrzeug? @relation(fields: [fahrzeugId], references: [id])
+
+    /// Letzter Stand, damit die Karte nach einem Serverneustart sofort
+    /// etwas anzeigen kann, ohne die Positionstabelle zu durchsuchen.
+    letzteLat     Float?
+    letzteLng     Float?
+    letzteMeldung DateTime?
+
+    positionen trackerposition[]
+}
+
+/// Der Verlauf. Nicht jede empfangene Meldung landet hier – siehe
+/// `trackerspeicher.ts`, dort werden Punkte im Stand ausgedünnt.
+model trackerposition {
+    id        Int     @id @default(autoincrement())
+    trackerId String
+    tracker   tracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+
+    /// Der Name aus der Meldung, bewusst mitgeschrieben statt nur über die
+    /// Beziehung geholt: benennst du "Fahrzeug 1" später in "Pelikan
+    /// Bodensee 1/11/1" um, bleibt der alte Verlauf so lesbar, wie er war.
+    /// Gleiches Muster wie `fahrerName` in `fahrt`.
+    name String
+
+    lat Float
+    lng Float
+
+    /// Der ESP32 liefert die vier Werte nur, wenn er sie hat.
+    speed  Float?
+    course Float?
+    sats   Int?
+    batt   Float?
+
+    /// Empfangszeit auf dem Server, nicht die Zeit des Trackers.
+    am DateTime @default(now())
+
+    @@index([trackerId, am])
 }

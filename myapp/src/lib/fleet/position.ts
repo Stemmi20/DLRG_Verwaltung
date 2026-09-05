@@ -17,7 +17,13 @@ export function parsePosition(payload: string): ParsedPosition | null {
 		),
 	);
 	return result
-		? { ...result, speed: data.speed ?? data.velocity, timestamp: data.timestamp ?? data.time }
+		? {
+				...result,
+				// Der Tracker schickt den Namen mit: {"name":"Fahrzeug 1","lat":…,"lon":…}
+				name: typeof data.name === 'string' && data.name.trim() ? data.name.trim() : undefined,
+				speed: data.speed ?? data.velocity,
+				timestamp: data.timestamp ?? data.time,
+			}
 		: null;
 }
 function valid(lat: number, lng: number): Pick<RoutePoint, 'lat' | 'lng'> | null {

@@ -211,7 +211,6 @@
 						<label
 							>Rufkennung / Kennung<input
 								bind:value={draft.callSign}
-								placeholder="z. B. Pelikan 1/59"
 							/></label
 						><label
 							>Betriebsstatus<select bind:value={draft.serviceStatus}
