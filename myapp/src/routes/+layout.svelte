@@ -17,3 +17,14 @@
 {/if}
 
 {@render children()}
+
+<style>
+	:global(:root) {
+		--navbar-hoehe: 72px;
+	}
+	@media (max-width: 850px) {
+		:global(:root) {
+			--navbar-hoehe: 60px;
+		}
+	}
+</style>

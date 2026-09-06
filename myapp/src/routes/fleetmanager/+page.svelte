@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import mqtt from 'mqtt';
 	import type { MqttClient } from 'mqtt';
 	import VehicleMap from '$lib/fleetcomponents/VehicleMap.svelte';
@@ -42,22 +44,31 @@
 		gpsHistory = $state<RoutePoint[]>([]),
 		routePoints = $state<RoutePoint[]>([]),
 		showRoute = $state(false),
-		view = $state<AppView>('home'),
 		mapSheetOpen = $state(false);
+
+	/*
+	 * Die Ansicht steht in der URL. Dadurch kann die Navbar im Layout sie
+	 * setzen, ohne dass beide Komponenten eine eigene Kopie führen.
+	 */
+	const view = $derived(($page.url.searchParams.get('view') as AppView) ?? 'home');
+
+	function zeige(ansicht: AppView): Promise<void> {
+		return goto(`/fleetmanager?view=${ansicht}`, { noScroll: true, keepFocus: true });
+	}
 
 	function select(id: string): void {
 		selectedId = id;
 		mapComponent?.focus(id);
 	}
-	function openMap(id: string = selectedId, route = false): void {
+	async function openMap(id: string = selectedId, route = false): Promise<void> {
 		selectedId = id;
 		showRoute = route;
-		view = 'map';
+		await zeige('map');
 		setTimeout(() => mapComponent?.focus(id), 0);
 	}
-	function openFleet(id: string = selectedId): void {
+	async function openFleet(id: string = selectedId): Promise<void> {
 		selectedId = id;
-		view = 'fleet';
+		await zeige('fleet');
 	}
 	function saveVehicle(changes: VehicleChanges): void {
 		vehicles = vehicles.map((vehicle) =>
@@ -117,8 +128,6 @@
 				? v
 				: {
 						...v,
-						// Fehlt der Name in einer Meldung, bleibt der bisherige stehen.
-						name: p.name ?? v.name,
 						lat: p.lat,
 						lng: p.lng,
 						status: 'available',
@@ -228,28 +237,6 @@
 </script>
 
 <main class="app" class:home-view={view !== 'map'}>
-	<header>
-		<div class="header-inner">
-			<div class="brand">
-				<img src={`${import.meta.env.BASE_URL}friedrichshafen.svg`} alt="DLRG Friedrichshafen" /><span
-					><strong>Fahrzeugortung</strong><small>Interne Einsatzübersicht</small></span
-				><i class="brand-divider"></i><img
-					class="fleetmap-header"
-					src={`${import.meta.env.BASE_URL}dlrg-fn-fleetmap.png`}
-					alt="Fleetmap"
-				/>
-			</div>
-			<nav>
-				<button class:active={view === 'home'} onclick={() => (view = 'home')}>Dashboard</button><button
-					class:active={view === 'fleet'}
-					onclick={() => (view = 'fleet')}>Fahrzeuge</button
-				><button class:active={view === 'map'} onclick={() => (view = 'map')}>Karte</button><button
-					class:active={view === 'users'}
-					onclick={() => (view = 'users')}>Benutzer</button
-				>
-			</nav>
-		</div>
-	</header>
 	{#if view === 'home'}
 		<HomeDashboard
 			{vehicles}
@@ -304,8 +291,8 @@
 								mapSheetOpen = false;
 							}}
 							><div class="row">
-								<i><img src="/PB3941.ico" alt="Hugo Eckener" style="height: 35px; width: 35px;"/></i><span>
-								<strong>{vehicle.name}</strong>
+								<i>▰</i><span>
+								<!-- <strong>{vehicle.name}</strong> -->
 								<small>{vehicle.callSign}</small></span><em
 									class={vehicle.status}>{vehicle.label}</em
 								>
@@ -357,13 +344,13 @@
 		</section>
 	{/if}
 	<nav class="mobile-nav" aria-label="Hauptnavigation">
-		<button class:active={view === 'home'} onclick={() => (view = 'home')}
+		<button class:active={view === 'home'} onclick={() => zeige('home')}
 			><AppIcon name="home" size={20} /><span>Dashboard</span></button
-		><button class:active={view === 'fleet'} onclick={() => (view = 'fleet')}
+		><button class:active={view === 'fleet'} onclick={() => zeige('fleet')}
 			><AppIcon name="vehicle" size={20} /><span>Fahrzeuge</span></button
-		><button class:active={view === 'map'} onclick={() => (view = 'map')}
+		><button class:active={view === 'map'} onclick={() => zeige('map')}
 			><AppIcon name="map" size={20} /><span>Karte</span></button
-		><button class:active={view === 'users'} onclick={() => (view = 'users')}
+		><button class:active={view === 'users'} onclick={() => zeige('users')}
 			><AppIcon name="crew" size={20} /><span>Benutzer</span></button
 		>
 	</nav>
@@ -372,97 +359,18 @@
 <style>
 	/* ─── Grundgerüst ───────────────────────────────────────────────── */
 	.app {
-		height: 100vh;
+		height: calc(100vh - var(--navbar-hoehe));
 		overflow: hidden;
 		background: #f3f5f6;
 		display: grid;
-		/* Kopfzeile · Toolbar · Inhalt */
-		grid-template-rows: 82px 112px minmax(0, 1fr);
+		/* Toolbar · Inhalt – die Kopfzeile stellt jetzt die Navbar im Layout */
+		grid-template-rows: 112px minmax(0, 1fr);
 		color: #575756;
 	}
 	/* Dashboard, Fahrzeuge und Benutzer haben keine Toolbar – ohne diese
 	   Regel bleibt deren 112px hoher Streifen als weiße Fläche stehen. */
 	.app.home-view {
-		grid-template-rows: 82px minmax(0, 1fr);
-	}
-
-	/* ─── Kopfzeile ─────────────────────────────────────────────────── */
-	header {
-		height: 82px;
-		padding: 0 28px;
-		background: #e30613;
-		border-bottom: 5px solid #ffed00;
-		color: #fff;
-	}
-	.header-inner {
-		width: 100%;
-		max-width: 1520px;
-		height: 100%;
-		margin: 0 auto;
-		display: flex;
-		align-items: center;
-	}
-	.brand {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: 11px;
-	}
-	.brand > img:first-child {
-		width: 88px;
-	}
-	.brand span {
-		display: flex;
-		flex-direction: column;
-	}
-	.brand strong {
-		font-size: 13px;
-	}
-	.brand small {
-		margin-top: 3px;
-		color: #ffffffb5;
-		font-size: 9px;
-	}
-	.brand-divider {
-		display: block;
-		width: 1px;
-		height: 33px;
-		margin: 0 3px;
-		background: #ffffff42;
-	}
-	.fleetmap-header {
-		width: 51px;
-		height: 51px;
-		object-fit: contain;
-		filter: drop-shadow(0 4px 8px #83000955);
-	}
-
-	/* Navigation als Segmentleiste, rechtsbündig. */
-	header nav {
-		height: 42px;
-		margin-left: auto;
-		padding: 4px;
-		border: 1px solid #ffffff26;
-		border-radius: 9px;
-		background: #99000b38;
-		display: flex;
-	}
-	header nav button {
-		padding: 0 16px;
-		border: 0;
-		border-radius: 6px;
-		background: transparent;
-		color: #ffffffb8;
-		font-size: 11px;
-		font-weight: 700;
-		transition: 0.15s;
-	}
-	header nav button:hover {
-		color: #fff;
-	}
-	header nav button.active {
-		background: #ffed00;
-		color: #575756;
+		grid-template-rows: minmax(0, 1fr);
 	}
 
 	/* ─── Toolbar (nur Kartenansicht) ───────────────────────────────── */
@@ -708,37 +616,14 @@
 	}
 
 	/* ─── Mittlere Breiten ──────────────────────────────────────────── */
-	@media (max-width: 1050px) {
-		.brand-divider,
-		.fleetmap-header {
-			display: none;
-		}
-	}
-
 	/* ─── Mobil ─────────────────────────────────────────────────────── */
 	@media (max-width: 850px) {
 		.app,
 		.app.home-view {
-			height: 100dvh;
+			height: calc(100dvh - var(--navbar-hoehe));
 			min-height: 0;
-			/* Kopfzeile · Inhalt · untere Navigation */
-			grid-template-rows: 72px minmax(0, 1fr) 68px;
-		}
-		header {
-			height: 72px;
-			padding: 0 12px;
-		}
-		.brand span {
-			display: none;
-		}
-		.brand > img:first-child {
-			width: 75px;
-		}
-		header nav {
-			height: 0;
-			padding: 0;
-			border: 0;
-			overflow: hidden;
+			/* Inhalt · untere Navigation */
+			grid-template-rows: minmax(0, 1fr) 68px;
 		}
 		.toolbar {
 			display: none;

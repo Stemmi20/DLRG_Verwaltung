@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import type {
-		AppView,
-		ConnectionStatus,
-	} from '$lib/fleet/types';
+	import type { AppView } from '$lib/fleet/types';
 
 	let {
 		user,
@@ -14,20 +11,31 @@
 	let menuOffen = $state(false);
 	let abmelden = $state(false);
 
-	let connection = $state<ConnectionStatus>('connecting'),
-		view = $state<AppView>('home');
-
-
-
-
-
-
 	const LINKS = [
 		{ pfad: '/', label: 'Start' },
 		{ pfad: '/boteinsatzgruppe', label: 'Einsatzgruppe' },
-		// { pfad: '/fleetmanager', label: 'Fleetmanager' },
+		{ pfad: '/fleetmanager', label: 'Fleetmanager' },
 		{ pfad: '/kfausb', label: 'Kraftfahrer' },
 	];
+
+	/**
+	 * Die vier Ansichten des Fleetmanagers. Sie stehen nur dort in der Leiste –
+	 * auf allen anderen Seiten wären sie ohne Bedeutung.
+	 */
+	const ANSICHTEN: { id: AppView; label: string }[] = [
+		{ id: 'home', label: 'Dashboard' },
+		{ id: 'fleet', label: 'Fahrzeuge' },
+		{ id: 'map', label: 'Karte' },
+		{ id: 'users', label: 'Benutzer' },
+	];
+
+	const imFleetmanager = $derived($page.url.pathname.startsWith('/fleetmanager'));
+
+	/*
+	 * Die Ansicht steht in der URL, nicht in einer lokalen Variablen: Navbar und
+	 * Seite lesen damit dieselbe Quelle, und der Zurück-Button funktioniert.
+	 */
+	const aktuelleAnsicht = $derived(($page.url.searchParams.get('view') as AppView) ?? 'home');
 
 	function istAktiv(pfad: string): boolean {
 		const aktuell = $page.url.pathname;
@@ -42,34 +50,36 @@
 </script>
 
 <header class="bg-[rgb(227,6,19)] font-dlrg-normal color-white">
-	<div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-2">
+	<div class="leiste mx-auto flex max-w-7xl items-center gap-4 px-4">
 		<!-- Links: Logo -->
 		<a href="/" class="shrink-0" aria-label="Zur Startseite">
 			<img src="/dlrg_og_fn.svg" alt="DLRG" class="h-10 w-auto" />
 		</a>
 
-		<!-- Mitte: Begrüßung und Titel -->
+		<!-- Mitte: Begrüßung -->
 		<div class="min-w-0 flex-1 text-center">
 			{#if user}
 				<p class="truncate font-semibold color-[rgb(255,237,0)]">
-					Hallo {user.vorname}, Wilkommen im DLRG Verwaltungsportal
+					Hallo {user.vorname}, willkommen im DLRG Verwaltungsportal
 				</p>
 			{/if}
 		</div>
 
-		<div class="min-w-0 flex-1 text-center header-inner app" class:home-view={view !== 'map'}>
-			<nav>
-				<button class:active={view === 'home'} onclick={() => (view = 'home')}>Dashboard</button><button
-					class:active={view === 'fleet'}
-					onclick={() => (view = 'fleet')}>Fahrzeuge</button
-				><button class:active={view === 'map'} onclick={() => (view = 'map')}>Karte</button><button
-					class:active={view === 'users'}
-					onclick={() => (view = 'users')}>Benutzer</button
-				>
+		<!-- Rechts daneben: Bild und Ansichtswechsel, nur im Fleetmanager -->
+		{#if imFleetmanager}
+			<img class="fleetmap-bild shrink-0" src="/dlrg-fn-fleetmap.png" alt="Fleetmap" />
+			<nav class="fleet-nav shrink-0" aria-label="Ansicht im Fleetmanager">
+				{#each ANSICHTEN as ansicht}
+					<a
+						href="/fleetmanager?view={ansicht.id}"
+						class:active={aktuelleAnsicht === ansicht.id}
+						data-sveltekit-noscroll>{ansicht.label}</a
+					>
+				{/each}
 			</nav>
-		</div>
+		{/if}
 
-		<!-- Rechts: Abmelden und Menüknopf -->
+		<!-- Ganz rechts: Abmelden und Menüknopf -->
 		<div class="flex shrink-0 items-center gap-2">
 			{#if user}
 				<button
@@ -95,7 +105,7 @@
 				aria-expanded={menuOffen}
 				aria-controls="hauptmenue"
 				aria-label={menuOffen ? 'Menü schließen' : 'Menü öffnen'}
-				class="rounded-lg p-2 transition hover:bg-white/15 lg:hidden"
+				class="rounded-lg p-2 transition hover:bg-white/15"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -117,171 +127,98 @@
 			</button>
 		</div>
 	</div>
+
+	{#if menuOffen}
+		<nav id="hauptmenue" class="menue" aria-label="Hauptnavigation">
+			{#each LINKS as link}
+				<a
+					href={link.pfad}
+					class:active={istAktiv(link.pfad)}
+					onclick={() => (menuOffen = false)}>{link.label}</a
+				>
+			{/each}
+		</nav>
+	{/if}
 </header>
 
-
 <style>
+	/*
+	 * Die Höhe kommt aus einer Variablen, weil die Fleetmanager-Seite ihre
+	 * eigene Höhe damit ausrechnet. Sie steht in src/routes/+layout.svelte.
+	 */
+	header {
+		position: relative;
+		height: var(--navbar-hoehe);
+		border-bottom: 5px solid #ffed00;
+	}
+	.leiste {
+		height: 100%;
+	}
+
+	.fleetmap-bild {
+		width: 46px;
+		height: 46px;
+		object-fit: contain;
+		filter: drop-shadow(0 4px 8px #83000955);
+	}
+
+	/* Segmentleiste, optisch wie vorher im Seitenkopf. */
+	.fleet-nav {
+		height: 42px;
+		padding: 4px;
+		border: 1px solid #ffffff26;
+		border-radius: 9px;
+		background: #99000b38;
+		display: flex;
+	}
+	.fleet-nav a {
+		display: flex;
+		align-items: center;
+		padding: 0 16px;
+		border-radius: 6px;
+		color: #ffffffb8;
+		font-size: 11px;
+		font-weight: 700;
+		text-decoration: none;
+		transition: 0.15s;
+	}
+	.fleet-nav a:hover {
+		color: #fff;
+	}
+	.fleet-nav a.active {
+		background: #ffed00;
+		color: #575756;
+	}
+
+	.menue {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		z-index: 1200;
+		padding: 6px 16px 12px;
+		background: #e30613;
+		border-bottom: 5px solid #ffed00;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.menue a {
+		padding: 10px 12px;
+		border-radius: 8px;
+		color: #fff;
+		font-weight: 700;
+		text-decoration: none;
+	}
+	.menue a.active {
+		background: #ffffff1f;
+	}
+
+	/* Auf schmalen Geräten übernimmt die untere Leiste der Seite. */
 	@media (max-width: 850px) {
-		.app,
-		.app.home-view {
-			height: 100dvh;
-			min-height: 0;
-			grid-template-rows: 60px minmax(0, 1fr) 68px !important;
-		}
-		.app > header {
-			height: 60px;
-			padding: 0 14px;
-		}
-		.app .header-inner {
-			display: flex;
-			justify-content: center;
-		}
-		.app .header-inner > nav,
-		.app .header-inner .right,
-		.brand span,
-		.brand-divider,
-		.fleetmap-header {
-			display: none !important;
-		}
-		.app .header-inner .brand > img:first-child {
-			width: 82px;
-		}
-		.toolbar {
+		.fleetmap-bild,
+		.fleet-nav {
 			display: none;
-		}
-		.dashboard {
-			position: relative;
-			margin: 0;
-			display: block;
-			border: 0;
-			border-radius: 0;
-			box-shadow: none;
-			overflow: hidden;
-		}
-		.map-shell {
-			position: absolute;
-			inset: 0;
-		}
-		.map-label {
-			top: 14px;
-			left: 14px;
-		}
-		.dashboard > aside {
-			position: absolute;
-			z-index: 750;
-			left: 10px;
-			right: 10px;
-			bottom: 10px;
-			height: min(64vh, 520px);
-			border: 0;
-			border-radius: 15px 15px 10px 10px;
-			box-shadow: 0 12px 40px #0005;
-			transform: translateY(calc(100% - 58px));
-			transition: transform 0.25s ease;
-			overflow: hidden;
-		}
-		.dashboard > aside.sheet-open {
-			transform: translateY(0);
-		}
-		.sheet-handle {
-			height: 58px;
-			flex: none;
-			padding: 0 18px;
-			border: 0;
-			border-bottom: 1px solid #e5e5e3;
-			background: #fff;
-			color: #575756;
-			display: flex;
-			align-items: center;
-			gap: 10px;
-		}
-		.sheet-handle i {
-			position: absolute;
-			top: 7px;
-			left: 50%;
-			width: 36px;
-			height: 4px;
-			border-radius: 5px;
-			background: #c8c8c5;
-		}
-		.sheet-handle span {
-			font-weight: 700;
-		}
-		.sheet-handle b {
-			margin-left: auto;
-			color: #e30613;
-			font-size: 18px;
-		}
-		.aside-head {
-			display: none;
-		}
-		.list {
-			flex: 1;
-		}
-		.route-control {
-			flex: none;
-		}
-		.legend {
-			display: none;
-		}
-		.mobile-map-actions {
-			position: absolute;
-			z-index: 600;
-			right: 12px;
-			top: 14px;
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-		}
-		.mobile-map-actions button {
-			width: 48px;
-			min-height: 48px;
-			padding: 6px 3px;
-			border: 0;
-			border-radius: 9px;
-			background: #fff;
-			color: #575756;
-			box-shadow: 0 4px 15px #0003;
-			font-size: 18px;
-			font-weight: 700;
-		}
-		.mobile-map-actions span {
-			display: block;
-			margin-top: 2px;
-			font-size: 7px;
-		}
-		.mobile-map-actions button.active {
-			background: #e30613;
-			color: #fff;
-		}
-		.mobile-map-actions button:disabled {
-			opacity: 0.45;
-		}
-		.mobile-nav {
-			z-index: 1000;
-			padding: 5px 7px max(5px, env(safe-area-inset-bottom));
-			border-top: 1px solid #d4d4d1;
-			background: #fff;
-			display: grid;
-			grid-template-columns: repeat(4, 1fr);
-			box-shadow: 0 -4px 18px #0002;
-		}
-		.mobile-nav button {
-			border: 0;
-			border-radius: 8px;
-			background: transparent;
-			color: #777;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			gap: 3px;
-			font-size: 8px;
-		}
-		.mobile-nav button.active {
-			background: #e3061310;
-			color: #e30613;
-			font-weight: 700;
 		}
 	}
 </style>
