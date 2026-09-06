@@ -11,13 +11,6 @@
 	let menuOffen = $state(false);
 	let abmelden = $state(false);
 
-	const LINKS = [
-		{ pfad: '/', label: 'Start' },
-		{ pfad: '/boteinsatzgruppe', label: 'Einsatzgruppe' },
-		{ pfad: '/fleetmanager', label: 'Fleetmanager' },
-		{ pfad: '/kfausb', label: 'Kraftfahrer' },
-	];
-
 	/**
 	 * Die vier Ansichten des Fleetmanagers. Sie stehen nur dort in der Leiste –
 	 * auf allen anderen Seiten wären sie ohne Bedeutung.
@@ -55,6 +48,21 @@
 		<a href="/" class="shrink-0" aria-label="Zur Startseite">
 			<img src="/dlrg_og_fn.svg" alt="DLRG" class="h-10 w-auto" />
 		</a>
+
+		<a href="/" aria-label="Zur Startseite" class="shrink-0">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				x="0px"
+				y="0px"
+				width="50"
+				height="50"
+				viewBox="0 0 24 24"
+			>
+				<path
+					d="M 12 2.0996094 L 1 12 L 4 12 L 4 21 L 11 21 L 11 15 L 13 15 L 13 21 L 20 21 L 20 12 L 23 12 L 12 2.0996094 z M 12 4.7910156 L 18 10.191406 L 18 11 L 18 19 L 15 19 L 15 13 L 9 13 L 9 19 L 6 19 L 6 10.191406 L 12 4.7910156 z"
+				></path>
+			</svg></a
+		>
 
 		<!-- Mitte: Begrüßung -->
 		<div class="min-w-0 flex-1 text-center">
@@ -98,47 +106,8 @@
 					Anmelden
 				</a>
 			{/if}
-
-			<button
-				type="button"
-				onclick={() => (menuOffen = !menuOffen)}
-				aria-expanded={menuOffen}
-				aria-controls="hauptmenue"
-				aria-label={menuOffen ? 'Menü schließen' : 'Menü öffnen'}
-				class="rounded-lg p-2 transition hover:bg-white/15"
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					aria-hidden="true"
-				>
-					{#if menuOffen}
-						<path d="M18 6 6 18M6 6l12 12" />
-					{:else}
-						<path d="M3 6h18M3 12h18M3 18h18" />
-					{/if}
-				</svg>
-			</button>
 		</div>
 	</div>
-
-	{#if menuOffen}
-		<nav id="hauptmenue" class="menue" aria-label="Hauptnavigation">
-			{#each LINKS as link}
-				<a
-					href={link.pfad}
-					class:active={istAktiv(link.pfad)}
-					onclick={() => (menuOffen = false)}>{link.label}</a
-				>
-			{/each}
-		</nav>
-	{/if}
 </header>
 
 <style>
@@ -188,30 +157,6 @@
 	.fleet-nav a.active {
 		background: #ffed00;
 		color: #575756;
-	}
-
-	.menue {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		z-index: 1200;
-		padding: 6px 16px 12px;
-		background: #e30613;
-		border-bottom: 5px solid #ffed00;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-	.menue a {
-		padding: 10px 12px;
-		border-radius: 8px;
-		color: #fff;
-		font-weight: 700;
-		text-decoration: none;
-	}
-	.menue a.active {
-		background: #ffffff1f;
 	}
 
 	/* Auf schmalen Geräten übernimmt die untere Leiste der Seite. */

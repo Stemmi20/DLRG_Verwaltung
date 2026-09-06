@@ -110,3 +110,254 @@ model trackerposition {
 
     @@index([trackerId, am])
 }
+
+// ═══════════════════════════════════ Bootstagebuch ═══════════════════════════════════
+
+/// Die Boote der Ortsgruppe. Getrennt von `fahrzeug`, weil ein Boot über
+/// Betriebsstunden geführt wird und nicht über Kilometer.
+model boot {
+    id       String  @id // Slug für die URL, z. B. "pelikan-3-94-1"
+    funkname String  @unique
+    /// Üblicher Liegeort – wird beim neuen Blatt vorgeschlagen.
+    liegeort String?
+    aktiv    Boolean @default(true)
+
+    maschinen   maschine[]
+    tagebuecher bootstagebuch[]
+}
+
+/// Eine Maschine eines Boots. Boote mit einem Motor haben genau einen
+/// Eintrag – so bleibt die Auswertung für alle Boote gleich.
+model maschine {
+    id     String @id // Slug, z. B. "pelikan-3-94-2-backbord"
+    bootId String
+    boot   boot   @relation(fields: [bootId], references: [id], onDelete: Cascade)
+
+    /// "Hauptmaschine", "Backbord", "Steuerbord" …
+    bezeichnung String
+    /// Reihenfolge im Formular.
+    position Int     @default(0)
+    aktiv    Boolean @default(true)
+
+    eintraege bootstagebuchMaschine[]
+
+    @@unique([bootId, bezeichnung])
+    @@index([bootId, position])
+}
+
+// ─── Auswahllisten ───
+
+/// Kontrolle vor Dienstbeginn. Ein Punkt in der Liste bedeutet: geprüft.
+enum kontrollpunkt {
+    motorenoel
+    kuehlwasser
+    motorvorwaermung
+    motorkontrollanzeige
+    sicherungen
+    gps_radar_echolot
+    stromladekontrolle
+    beleuchtung
+    scheinwerfer
+    blaulicht
+    funkgeraet_2m
+    handfunk_2m
+    funkgeraet_4m
+    intercom
+    feuerloescher
+}
+
+/// „Einsatz alarmiert über". Als Liste, falls doch mehrere zutreffen.
+enum alarmierungsweg {
+    funkmeldeempfaenger
+    funk
+    eigene_beobachtung
+}
+
+enum einsatzart {
+    rettung_aus_notlagen
+    erste_hilfe_ohne_uebergabe
+    suchaktion_mit_booten
+    bergung
+    schlepphilfe
+    sicherung_veranstaltung
+    erste_hilfe_ohne_notlage
+}
+
+enum bootsfunktion {
+    BF // Bootsführer
+    FU // Funker
+    WRH // Wasserrettungshelfer
+    EH // Sanitäter
+}
+
+enum tageszeit {
+    vormittag
+    nachmittag
+}
+
+// ─────────────────────────────────────────────────────── Hauptdatensatz
+
+model bootstagebuch {
+    id Int @id @default(autoincrement())
+
+    // ── Kopf ──
+    bootId String
+    boot   boot   @relation(fields: [bootId], references: [id])
+
+    /// Der Funkname zum Zeitpunkt des Dienstes. Wird mitgeschrieben, damit
+    /// alte Blätter lesbar bleiben, wenn ein Boot später umbenannt wird –
+    /// gleiches Muster wie `fahrerName` in `fahrt`.
+    funkname String
+    liegeort String
+    datum    DateTime
+
+    // ── Kontrolle vor Dienstbeginn ──
+    kontrolle kontrollpunkt[]
+
+    // ── Freitextfelder ──
+    schaeden     String?
+    reparaturen  String?
+
+    // Maschinen und Betriebsstunden stehen in `bootstagebuchMaschine` –
+    // ein Boot kann mehrere Motoren mit eigenen Ständen haben.
+
+    // ── Tank ──
+    /// Tankanzeige in Prozent.
+    tankBeginn Float?
+    tankEnde   Float?
+    /// Nachgetankt – hier wirklich in Litern.
+    getanktLiter  Float?
+    getanktBetrag Decimal? @db.Decimal(8, 2)
+    tankort       String?
+
+    // ── Seite 2: Kopf ──
+    grundDerFahrt String?
+    bereich       String?
+
+    // ── Seite 2: Statistische Werte ──
+    alarmierung alarmierungsweg[]
+
+    /// Einsatzerfolg
+    patientUebergeben Boolean @default(false)
+    mitNotarzt        Boolean @default(false)
+    mitReanimation    Boolean @default(false)
+
+    einsatzarten einsatzart[]
+
+    /// Die beiden Ja/Nein-Zeilen. null = noch nicht beantwortet, deshalb
+    /// nullable statt Boolean mit Default.
+    einsatzprotokollWeitergeleitet Boolean?
+    rueckmeldungWeitergeleitet     Boolean?
+
+    // ── Unterschriften ──
+    bootsfuehrerName  String?
+    bootssteuererName String?
+    unterschriebenAm  DateTime?
+
+    // ── Verwaltung ──
+    /// Wer den Eintrag angelegt hat. Der Name wird mitgeschrieben, damit das
+    /// Tagebuch lesbar bleibt, wenn der Mitgliedsdatensatz später verschwindet.
+    erstelltVonId   String
+    erstelltVonName String
+    angelegtAm      DateTime @default(now())
+    geaendertAm     DateTime @updatedAt
+
+    maschinen    bootstagebuchMaschine[]
+    wetter       bootstagebuchWetter[]
+    besatzung    bootstagebuchBesatzung[]
+    dienstangabe bootstagebuchDienstangabe[]
+
+    @@index([bootId, datum])
+    @@index([datum])
+}
+
+// ─────────────────────────────────────────────────────── Abhängige Tabellen
+
+/// Je Maschine eine Zeile pro Blatt.
+model bootstagebuchMaschine {
+    id         Int           @id @default(autoincrement())
+    tagebuchId Int
+    tagebuch   bootstagebuch @relation(fields: [tagebuchId], references: [id], onDelete: Cascade)
+    maschineId String
+    maschine   maschine      @relation(fields: [maschineId], references: [id])
+
+    /// Bezeichnung zum Zeitpunkt des Dienstes, damit alte Blätter lesbar
+    /// bleiben, wenn eine Maschine später umbenannt oder getauscht wird.
+    bezeichnung String
+
+    anUhrzeit String? // "HH:MM"
+    anOrt     String?
+    abUhrzeit String? // "HH:MM"
+    abOrt     String?
+
+    /// Der Vordruck schreibt eine Nachkommastelle vor (z. B. 478,1).
+    betriebsstundenAnfang Float?
+    betriebsstundenEnde   Float?
+    // Die Differenz wird berechnet, nicht gespeichert.
+
+    position Int @default(0)
+
+    @@unique([tagebuchId, maschineId])
+    @@index([tagebuchId, position])
+}
+
+/// Zwei Zeilen je Tagebuch: Vormittag und Nachmittag.
+model bootstagebuchWetter {
+    id            Int           @id @default(autoincrement())
+    tagebuchId    Int
+    tagebuch      bootstagebuch @relation(fields: [tagebuchId], references: [id], onDelete: Cascade)
+
+    zeitraum tageszeit
+
+    /// Alle Angaben als Text: der Vordruck lässt "3-4", "SW" oder "leicht
+    /// bewegt" zu, das lässt sich nicht sinnvoll in Zahlen zwingen.
+    windstaerke   String?
+    windrichtung  String?
+    seegang       String?
+    wetter        String?
+    lufttemp      String?
+    wassertemp    String?
+
+    @@unique([tagebuchId, zeitraum])
+}
+
+model bootstagebuchBesatzung {
+    id         Int           @id @default(autoincrement())
+    tagebuchId Int
+    tagebuch   bootstagebuch @relation(fields: [tagebuchId], references: [id], onDelete: Cascade)
+
+    /// Mitglieder-ObjectId aus der MongoDB, sofern die Person dort steht.
+    userId String?
+    name   String
+    /// Freitext für Auswärtige, z. B. "WW", "JUH", "FW".
+    organisation String?
+
+    funktion bootsfunktion
+
+    von String? // "HH:MM"
+    bis String? // "HH:MM"
+    /// Steht auf dem Vordruck als eigene Spalte und muss nicht der Differenz
+    /// aus von/bis entsprechen – deshalb gespeichert statt berechnet.
+    dienstzeitStd Float?
+
+    /// Reihenfolge der Zeilen wie auf dem Blatt.
+    position Int @default(0)
+
+    @@index([tagebuchId, position])
+}
+
+model bootstagebuchDienstangabe {
+    id         Int           @id @default(autoincrement())
+    tagebuchId Int
+    tagebuch   bootstagebuch @relation(fields: [tagebuchId], references: [id], onDelete: Cascade)
+
+    uhrzeit String? // "HH:MM"
+    ort     String?
+    /// Anlass/Auftrag/Wegpunkte/Bootskennzeichen/Namen – auf dem Papier eine
+    /// einzige breite Spalte, deshalb hier auch ein Feld.
+    anlass String?
+
+    position Int @default(0)
+
+    @@index([tagebuchId, position])
+}

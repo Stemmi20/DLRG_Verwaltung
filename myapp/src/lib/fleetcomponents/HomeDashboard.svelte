@@ -179,14 +179,6 @@
 				></span
 			><b>→</b>
 		</button>
-		<button class="quick-card mqtt-card" onclick={() => (showConnectionLog = true)}>
-			<div class="card-icon"><AppIcon name="status" /></div>
-			<span
-				><small>MQTT-Verbindung</small><strong>{connectionText}</strong><em
-					>Letzte Verbindung:<br />{lastConnection}</em
-				></span
-			><b>→</b>
-		</button>
 	</div>
 
 	<div class="content-grid">
@@ -220,7 +212,7 @@
 			</div>
 		</section>
 
-		<aside class="summary-panel">
+		<!-- <aside class="summary-panel">
 			<small>Flottenstatus</small>
 			<h2>Übersicht</h2>
 			{#each statusOptions as option}<div class="summary-row">
@@ -229,7 +221,7 @@
 					>
 				</div>{/each}
 			<div class="summary-total"><span>Fahrzeuge gesamt</span><strong>{vehicles.length}</strong></div>
-		</aside>
+		</aside> -->
 	</div>
 
 	<!-- <div class="insight-grid">
