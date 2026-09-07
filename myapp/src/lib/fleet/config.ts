@@ -3,7 +3,7 @@ export const defaultConfig: AppConfig = {
 	username: '',
 	password: '',
 	brokerUrl: 'wss://broker.hivemq.com:8884/mqtt',
-	topic: 'tracker/tracker-01/position',
+	topic: 'tracker/3941/position',
 	mapCenter: null,
 	mapZoom: null,
 };

@@ -2,14 +2,13 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import mqtt from 'mqtt';
-	import type { MqttClient } from 'mqtt';
 	import VehicleMap from '$lib/fleetcomponents/VehicleMap.svelte';
 	import HomeDashboard from '$lib/fleetcomponents/HomeDashboard.svelte';
 	import FleetManagement from '$lib/fleetcomponents/FleetManager.svelte';
 	import UserManagement from '$lib/fleetcomponents/UserManagemant.svelte';
 	import AppIcon from '$lib/fleetcomponents/AppIcon.svelte';
-	import { parsePosition, distanceMeters, calculatedSpeed } from '$lib/fleet/position';
+	import { distanceMeters, calculatedSpeed } from '$lib/fleet/position';
+	import type { Fahrzeug, TrackerEvent } from '$lib/types/tracker';
 	import { appConfig, defaultVehicles } from '$lib/fleet/defaults';
 	import {
 		loadVehicleData,
@@ -34,10 +33,15 @@
 
 	let vehicles = $state<Vehicle[]>(defaultVehicles.map((v) => ({ ...v })));
 	let selectedId = $state(defaultVehicles[0]?.id ?? '');
+	/**
+	 * Aus tracker/<id>/position wird die ID gelesen: der Server liefert alle
+	 * Tracker, dieses Board zeigt nur seinen eigenen.
+	 */
+	const trackerId = config.topic.split('/')[1] ?? '';
+
 	let connection = $state<ConnectionStatus>('connecting'),
-		connectionText = $state('MQTT verbindet …'),
+		connectionText = $state('Verbindet …'),
 		mapComponent = $state<VehicleMapHandle>(),
-		client: MqttClient | undefined,
 		lastUpdate = $state('Noch keine Live-Position'),
 		lastConnection = $state('Noch keine Verbindung'),
 		connectionLog = $state<ConnectionLogEntry[]>([]),
@@ -92,18 +96,17 @@
 			...connectionLog,
 		].slice(0, 30);
 	}
-	function apply(payload: string): void {
-		const p = parsePosition(payload);
-		if (!p) {
-			connection = 'error';
-			connectionText = 'Datenformat ungültig';
-			return;
-		}
-		let parsedTime = p.timestamp ? new Date(p.timestamp).getTime() : Date.now();
-		if (typeof p.timestamp === 'number' && p.timestamp < 1e12) parsedTime = p.timestamp * 1000;
+	function apply(f: Fahrzeug): void {
+		if (trackerId && trackerId !== '+' && f.id !== trackerId) return;
+
+		// spur[0] ist die neueste Position, siehe $lib/types/tracker.
+		const aktuell = f.spur[0];
+		if (!aktuell) return;
+
+		const parsedTime = Date.parse(aktuell.am);
 		const point: RoutePoint = {
-			lat: p.lat,
-			lng: p.lng,
+			lat: aktuell.lat,
+			lng: aktuell.lng,
 			time: Number.isFinite(parsedTime) ? parsedTime : Date.now(),
 		};
 		gpsHistory = [...gpsHistory, point].slice(-5);
@@ -112,8 +115,10 @@
 			routePoints = pruneRoute([...routePoints, point]);
 			saveRouteHistory(routePoints);
 		}
-		const computed = calculatedSpeed(gpsHistory);
-		const speed = computed === null ? 'Unplausibel' : `${(computed ?? 0).toFixed(1)} km/h`;
+		// Liefert der Tracker eine Geschwindigkeit, hat sie Vorrang vor der
+		// aus den letzten Punkten gerechneten.
+		const computed = aktuell.speed ?? calculatedSpeed(gpsHistory);
+		const speed = computed === null ? 'Unplausibel' : `${computed.toFixed(1)} km/h`;
 		const stamp = new Date(point.time).toLocaleString('de-DE', {
 			day: '2-digit',
 			month: '2-digit',
@@ -128,11 +133,13 @@
 				? v
 				: {
 						...v,
-						lat: p.lat,
-						lng: p.lng,
+						// Fehlt der Name in einer Meldung, bleibt der bisherige stehen.
+						name: f.name || v.name,
+						lat: aktuell.lat,
+						lng: aktuell.lng,
 						status: 'available',
 						label: 'Live',
-						address: `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`,
+						address: `${aktuell.lat.toFixed(6)}, ${aktuell.lng.toFixed(6)}`,
 						updated: stamp,
 						speed,
 					},
@@ -148,91 +155,60 @@
 			standardCrew: stored[vehicle.id]?.standardCrew ?? vehicle.standardCrew ?? [],
 		}));
 		routePoints = loadRouteHistory();
-		let cancelled = false,
-			fallbackTimer: ReturnType<typeof setTimeout> | undefined,
-			endpointIndex = 0;
-		const endpoints = [config.brokerUrl];
-		if (location.protocol === 'http:' && !endpoints.includes('ws://broker.hivemq.com:8000/mqtt'))
-			endpoints.push('ws://broker.hivemq.com:8000/mqtt');
-		function start() {
-			try {
-				if (cancelled) return;
-				const endpoint = endpoints[endpointIndex];
-				connection = 'connecting';
-				connectionText = endpointIndex ? 'MQTT nutzt Port 8000 …' : 'MQTT verbindet …';
-				logConnection('connecting', `Verbindungsversuch über ${endpoint}`);
-				const mqttClient = mqtt.connect(endpoint, {
-					clientId: `dlrg_web_${Math.random().toString(16).slice(2, 10)}`,
-					protocolVersion: 4,
-					clean: true,
-					reconnectPeriod: 3000,
-					connectTimeout: 10000,
-					keepalive: 30,
-				});
-				client = mqttClient;
-				fallbackTimer = setTimeout(() => {
-					if (!client?.connected && endpointIndex + 1 < endpoints.length) {
-						client?.end(true);
-						endpointIndex++;
-						start();
-					} else if (!client?.connected) {
-						connection = 'error';
-						connectionText = 'Broker nicht erreichbar';
-					}
-				}, 11000);
-				mqttClient.on('connect', () => {
-					clearTimeout(fallbackTimer);
-					connection = 'online';
-					connectionText = 'MQTT verbunden';
-					lastConnection = new Date().toLocaleString('de-DE', {
-						day: '2-digit',
-						month: '2-digit',
-						hour: '2-digit',
-						minute: '2-digit',
-						second: '2-digit',
-					});
-					logConnection('online', 'Verbindung zum MQTT-Broker hergestellt');
-					mqttClient.subscribe(config.topic, { qos: 0 }, (error) => {
-						if (error) {
-							connection = 'error';
-							connectionText = 'Topic-Abo fehlgeschlagen';
-							logConnection('error', 'Topic konnte nicht abonniert werden');
-						} else logConnection('online', `Topic ${config.topic} abonniert`);
-					});
-				});
-				mqttClient.on('message', (topic, payload) => {
-					if (topic === config.topic) apply(payload.toString());
-				});
-				mqttClient.on('reconnect', () => {
-					connection = 'connecting';
-					connectionText = 'MQTT verbindet erneut …';
-					logConnection('connecting', 'Automatischer Wiederverbindungsversuch');
-				});
-				mqttClient.on('offline', () => {
-					connection = 'error';
-					connectionText = 'MQTT offline';
-					logConnection('error', 'Verbindung zum Broker verloren');
-				});
-				mqttClient.on('error', (error) => {
-					connection = 'error';
-					connectionText = error?.message?.includes('connack')
-						? 'Broker lehnt Verbindung ab'
-						: 'MQTT-Verbindung gestört';
-					logConnection('error', error?.message || 'Unbekannter MQTT-Fehler');
-				});
-			} catch (error) {
-				connection = 'error';
-				connectionText = 'MQTT konnte nicht geladen werden';
-				logConnection('error', 'MQTT-Modul konnte nicht gestartet werden');
-				console.error('MQTT-Start fehlgeschlagen:', error);
-			}
-		}
-		start();
-		return () => {
-			cancelled = true;
-			clearTimeout(fallbackTimer);
-			client?.end(true);
+		/*
+		 * Die Positionen kommen über Server-Sent Events von /api/tracker/stream.
+		 * Der Server hält die MQTT-Verbindung samt Zugangsdaten – im Browser
+		 * liegt damit kein Brokerzugang mehr.
+		 */
+		connection = 'connecting';
+		connectionText = 'Verbindet …';
+		logConnection('connecting', 'Verbindungsversuch über /api/tracker/stream');
+
+		const es = new EventSource('/api/tracker/stream');
+
+		es.onopen = () => {
+			connection = 'online';
+			connectionText = 'Live-Daten verbunden';
+			lastConnection = new Date().toLocaleString('de-DE', {
+				day: '2-digit',
+				month: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit',
+			});
+			logConnection('online', 'Verbindung zum Server hergestellt');
 		};
+
+		es.onmessage = (ereignis) => {
+			let daten: TrackerEvent;
+			try {
+				daten = JSON.parse(ereignis.data) as TrackerEvent;
+			} catch {
+				logConnection('error', 'Nachricht vom Server unlesbar');
+				return;
+			}
+			// 'ping' hält nur die Verbindung offen und wird übergangen.
+			if (daten.art === 'init') for (const f of daten.fahrzeuge) apply(f);
+			else if (daten.art === 'position') apply(daten.fahrzeug);
+		};
+
+		es.onerror = () => {
+			/*
+			 * EventSource verbindet von allein neu – der Server schickt dafür
+			 * ein retry. Nur ein endgültig geschlossener Stream ist ein Fehler.
+			 */
+			if (es.readyState === EventSource.CLOSED) {
+				connection = 'error';
+				connectionText = 'Verbindung zum Server verloren';
+				logConnection('error', 'Stream geschlossen');
+			} else {
+				connection = 'connecting';
+				connectionText = 'Verbindet erneut …';
+				logConnection('connecting', 'Automatischer Wiederverbindungsversuch');
+			}
+		};
+
+		return () => es.close();
 	});
 </script>
 
@@ -487,15 +463,12 @@
 	.row > span {
 		flex: 1;
 	}
-	.row strong,
 	.row small,
 	.meta span,
 	.meta b {
 		display: block;
 	}
-	.row strong {
-		font-size: 13px;
-	}
+
 	.row small {
 		font-size: 10px;
 		color: #575756;

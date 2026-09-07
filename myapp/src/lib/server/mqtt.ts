@@ -21,10 +21,10 @@ import { gespeicherteFahrzeuge, positionSpeichern } from './trackerspeicher';
  * `trackerspeicher.ts`.
  */
 
-const BROKER = 'mqtt://broker.hivemq.com:1883';
+import { MQTT_BROKER, MQTT_BENUTZER, MQTT_PASSWORT } from '$env/static/private';
 
-/** Wildcard: fängt tracker/tracker-01/position genauso wie weitere Geräte. */
-const TOPIC = 'tracker/+/position';
+/** Wildcard: fängt tracker/3941/position genauso wie weitere Geräte. */
+const TOPIC = 'tracker/3941/position';
 
 const bus = new EventEmitter();
 bus.setMaxListeners(0);
@@ -51,16 +51,19 @@ export function starteMqtt(): void {
 			console.log('[mqtt] vorbelegt aus der Datenbank:', liste.length);
 		})
 		.catch((fehler) => console.error('[mqtt] Vorbelegung fehlgeschlagen', fehler));
-
-	const client = mqtt.connect(BROKER, {
+		
+	console.log('[mqtt] Broker:', MQTT_BROKER, '· Benutzer:', JSON.stringify(MQTT_BENUTZER));
+	const client = mqtt.connect(MQTT_BROKER, {
 		clientId: `dlrg-board-${Math.random().toString(16).slice(2, 10)}`,
+		username: MQTT_BENUTZER || undefined,
+		password: MQTT_PASSWORT || undefined,
 		reconnectPeriod: 5000,
 		connectTimeout: 10_000
 	});
 	G.__lvsMqtt = client;
 
 	client.on('connect', () => {
-		console.log('[mqtt] verbunden mit', BROKER);
+		console.log('[mqtt] verbunden mit', MQTT_BROKER);
 		client.subscribe(TOPIC, { qos: 0 }, (fehler) => {
 			if (fehler) console.error('[mqtt] Abonnement fehlgeschlagen', fehler);
 			else console.log('[mqtt] abonniert:', TOPIC);

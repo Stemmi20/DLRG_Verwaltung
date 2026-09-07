@@ -13,8 +13,6 @@ export interface RoutePoint {
 export interface ParsedPosition {
 	lat: number;
 	lng: number;
-	/** Aus der MQTT-Nutzlast, fehlt bei reinen Koordinaten-Meldungen. */
-	name?: string;
 	speed?: unknown;
 	timestamp?: string | number;
 }
@@ -46,7 +44,6 @@ export interface Appointment {
 
 export interface Vehicle {
 	id: string;
-	/** Kommt live vom Tracker und wird nicht von Hand gepflegt. */
 	name: string;
 	callSign: string;
 	status: TrackerStatus;
@@ -78,9 +75,11 @@ export type StoredVehicleData = Omit<VehicleChanges, 'id'>;
 export type StoredVehicleMap = Record<string, Partial<StoredVehicleData>>;
 
 export interface AppConfig {
-	username: string;
-	password: string;
-	brokerUrl: string;
+	/**
+	 * Nur noch zur Zuordnung: aus tracker/<id>/position wird die Tracker-ID
+	 * gelesen. Die Verbindung zum Broker hält der Server, der Browser bekommt
+	 * die Positionen über /api/tracker/stream.
+	 */
 	topic: string;
 	mapCenter: [number, number] | null;
 	mapZoom: number | null;

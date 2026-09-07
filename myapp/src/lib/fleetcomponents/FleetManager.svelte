@@ -64,7 +64,9 @@
 		{ value: 'no-gps', label: 'Kein GPS-Signal' },
 	];
 	function statusLabel(value: ServiceStatus): string {
-		return statusOptions.find((option) => option.value === value)?.label ?? 'Einsatzbereit auf der Wache';
+		return (
+			statusOptions.find((option) => option.value === value)?.label ?? 'Einsatzbereit auf der Wache'
+		);
 	}
 	function dueState(date: string): 'none' | 'overdue' | 'soon' | 'ok' {
 		if (!date) return 'none';
@@ -192,7 +194,7 @@
 			</div>
 			{#each vehicles as item}<button class:active={item.id === currentId} onclick={() => edit(item)}
 					><i><AppIcon name="vehicle" size={19} /></i>
-						<!-- <span><strong>{item.name}</strong><small>{item.callSign}</small></span> -->
+					<!-- <span><strong>{item.name}</strong><small>{item.callSign}</small></span> -->
 					<em class={item.serviceStatus}>{statusLabel(item.serviceStatus)}</em></button
 				>{/each}
 		</aside>
@@ -208,11 +210,7 @@
 					</div>
 					<div class="fields">
 						<!-- <label>Name<input bind:value={draft.name} placeholder="z. B. Gerätewagen Wasserrettung" /></label> -->
-						<label
-							>Rufkennung / Kennung<input
-								bind:value={draft.callSign}
-							/></label
-						><label
+						<label>Rufkennung / Kennung<input bind:value={draft.callSign} /></label><label
 							>Betriebsstatus<select bind:value={draft.serviceStatus}
 								>{#each statusOptions as option}<option value={option.value}>{option.label}</option
 									>{/each}</select
@@ -304,7 +302,7 @@
 							</div>{/each}
 					</div>
 				</section>
-				
+
 				<!-- <section class="card">
 					<div class="card-head">
 						<i><AppIcon name="crew" /></i>
@@ -402,7 +400,7 @@
 							</article>{/each}
 					</div>
 				</section> -->
-				
+
 				<div class="savebar">
 					<span class:visible={saved || dirty}
 						>{saved ? '✓ Änderungen gespeichert' : dirty ? '● Ungespeicherte Änderungen' : ''}</span
@@ -495,15 +493,6 @@
 		background: #e30613;
 		color: #ffed00;
 	}
-	.vehicle-picker span strong,
-	.vehicle-picker span small {
-		display: block;
-	}
-	.vehicle-picker span small {
-		margin-top: 4px;
-		color: #888;
-		font-size: 9px;
-	}
 	.vehicle-picker em {
 		padding: 5px 7px;
 		border-radius: 12px;
@@ -595,10 +584,6 @@
 	.add-row.crew {
 		grid-template-columns: 1fr 1fr auto;
 	}
-	.add-row input {
-		margin: 0;
-	}
-	.add-row button,
 	.savebar button,
 	.route-actions button,
 	.loadout-form button {
@@ -835,7 +820,6 @@
 		.loadout-form {
 			grid-template-columns: 1fr;
 		}
-		.add-row button,
 		.loadout-form button {
 			height: 43px;
 		}
@@ -867,42 +851,6 @@
 		grid-template-columns: repeat(3, 1fr);
 		gap: 15px;
 	}
-	.maintenance-grid label > span {
-		display: block;
-		margin-top: 6px;
-		color: #888;
-		font-size: 8px;
-		font-weight: 400;
-	}
-	.maintenance-grid label > span.soon {
-		color: #9a6b00;
-		font-weight: 700;
-	}
-	.maintenance-grid label > span.overdue {
-		color: #e30613;
-		font-weight: 700;
-	}
-	.maintenance-grid label.notes {
-		grid-column: 1/-1;
-	}
-	.maintenance-grid textarea {
-		width: 100%;
-		min-height: 82px;
-		margin-top: 7px;
-		padding: 11px 12px;
-		resize: vertical;
-		border: 1px solid #d3d3d0;
-		border-radius: 7px;
-		background: #fafafa;
-		color: #575756;
-		font: inherit;
-		font-size: 11px;
-		outline: none;
-	}
-	.maintenance-grid textarea:focus {
-		border-color: #e30613;
-		box-shadow: 0 0 0 3px #e3061312;
-	}
 	.appointment-head {
 		margin-top: 22px;
 		padding-top: 19px;
@@ -911,123 +859,17 @@
 		align-items: center;
 		justify-content: space-between;
 	}
-	.appointment-head small,
-	.appointment-head strong {
-		display: block;
-	}
-	.appointment-head small {
-		color: #888;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		font-size: 8px;
-	}
-	.appointment-head strong {
-		margin-top: 4px;
-		font-size: 12px;
-	}
-	.appointment-head > b {
-		display: grid;
-		place-items: center;
-		width: 28px;
-		height: 28px;
-		border-radius: 50%;
-		background: #ffed00;
-		font-size: 10px;
-	}
 	.appointment-form {
 		display: grid;
 		grid-template-columns: 1fr 160px 1.3fr auto;
 		gap: 8px;
 		margin-top: 12px;
 	}
-	.appointment-form input {
-		margin: 0;
-	}
-	.appointment-form button {
-		border: 0;
-		border-radius: 7px;
-		background: #575756;
-		color: #fff;
-		padding: 0 15px;
-		font-size: 10px;
-		font-weight: 700;
-	}
 	.appointment-list {
 		margin-top: 12px;
 		border: 1px solid #e5e5e3;
 		border-radius: 8px;
 		overflow: hidden;
-	}
-	.appointment-list > p {
-		margin: 0;
-		padding: 20px;
-		color: #999;
-		text-align: center;
-		font-size: 10px;
-	}
-	.appointment-list article {
-		min-height: 58px;
-		padding: 10px 12px;
-		border-bottom: 1px solid #ececea;
-		display: grid;
-		grid-template-columns: 36px 1fr auto 28px;
-		gap: 10px;
-		align-items: center;
-	}
-	.appointment-list article:last-child {
-		border: 0;
-	}
-	.appointment-list article > i {
-		display: grid;
-		place-items: center;
-		width: 34px;
-		height: 34px;
-		border-radius: 7px;
-		background: #e8f6f0;
-		color: #16855b;
-	}
-	.appointment-list article > i.soon {
-		background: #fff3d1;
-		color: #956b00;
-	}
-	.appointment-list article > i.overdue {
-		background: #ffe4e6;
-		color: #e30613;
-	}
-	.appointment-list strong,
-	.appointment-list small {
-		display: block;
-	}
-	.appointment-list strong {
-		font-size: 11px;
-	}
-	.appointment-list small {
-		margin-top: 3px;
-		color: #888;
-		font-size: 9px;
-	}
-	.appointment-list em {
-		padding: 5px 8px;
-		border-radius: 20px;
-		background: #e8f6f0;
-		color: #16855b;
-		font-size: 8px;
-		font-style: normal;
-		font-weight: 700;
-	}
-	.appointment-list em.soon {
-		background: #fff3d1;
-		color: #956b00;
-	}
-	.appointment-list em.overdue {
-		background: #ffe4e6;
-		color: #e30613;
-	}
-	.appointment-list article > button {
-		border: 0;
-		background: none;
-		color: #e30613;
-		font-size: 18px;
 	}
 	@media (max-width: 950px) {
 		.maintenance-card {
@@ -1039,26 +881,11 @@
 		.appointment-form {
 			grid-template-columns: 1fr 1fr;
 		}
-		.appointment-form button {
-			height: 42px;
-		}
 	}
 	@media (max-width: 600px) {
 		.maintenance-grid,
 		.appointment-form {
 			grid-template-columns: 1fr;
-		}
-		.maintenance-grid label.notes {
-			grid-column: auto;
-		}
-		.appointment-list article {
-			grid-template-columns: 36px 1fr 28px;
-		}
-		.appointment-list em {
-			grid-column: 2;
-		}
-		.appointment-form button {
-			height: 43px;
 		}
 	}
 </style>
