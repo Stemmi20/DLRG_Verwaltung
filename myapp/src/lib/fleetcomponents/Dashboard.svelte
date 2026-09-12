@@ -229,7 +229,8 @@
 			<div class="brand">
 				<img src={`${import.meta.env.BASE_URL}friedrichshafen.svg`} alt="DLRG Friedrichshafen" /><span
 					><strong>Fahrzeugortung</strong><small>Interne Einsatzübersicht</small></span
-				><i class="brand-divider"></i><img
+				><i class="brand-divider"></i>
+				<img
 					class="fleetmap-header"
 					src={`${import.meta.env.BASE_URL}dlrg-fn-fleetmap.png`}
 					alt="Fleetmap"

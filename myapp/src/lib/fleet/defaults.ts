@@ -11,7 +11,7 @@ export const defaultVehicles: Vehicle[] = [
 		id: 'fahrzeug-1',
 		// Platzhalter bis zur ersten Meldung vom Server.
 		name: 'Fahrzeug 1',
-		callSign: 'Pelikan Bodensee 1/11/1',
+		callSign: 'Pelikan Bodensee 3/94/1',
 		status: 'offline',
 		label: 'Offline',
 		address: 'Noch keine Position empfangen',

@@ -11,10 +11,10 @@
     } = $props();
 </script>
 
-<img
+<!-- <img
 	class="fleetmap-mark"
 	src={`${baseUrl}dlrg-fn-fleetmap.png`}
 	alt="DLRG Friedrichshafen Fleetmap"
-/>
+/> -->
 
 {@render children()}

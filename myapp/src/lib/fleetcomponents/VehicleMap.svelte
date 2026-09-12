@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import type { CircleMarker, Map as LeafletMap, Marker, Polyline } from 'leaflet';
 	import type { RoutePoint, Vehicle } from '$lib/fleet/types';
+	import { wetterUmschalter, ebenenAktualisieren } from '$lib/fleet/wetter';
 	let {
 		vehicles,
 		selectedId,
@@ -22,6 +23,8 @@
 	let element: HTMLDivElement,
 		map: LeafletMap | undefined,
 		L: typeof import('leaflet'),
+		wetterAufraeumen: (() => void) | undefined,
+		wetterTakt: ReturnType<typeof setInterval> | undefined,
 		routeLine: Polyline | undefined,
 		userMarker: CircleMarker | undefined;
 	const markers = new Map<string, Marker>();
@@ -119,11 +122,19 @@
 				maxZoom: 19,
 				attribution: '&copy; OpenStreetMap-Mitwirkende',
 			}).addTo(map);
+
+			// Planquadrate und Wetter im selben Umschalter, alle standardmäßig aus.
+			wetterAufraeumen = wetterUmschalter(L, map);
+
+			// Radarbilder altern schnell; alle fünf Minuten neu laden.
+			wetterTakt = setInterval(() => map && ebenenAktualisieren(map), 5 * 60_000);
 			sync();
 			syncRoute();
 		})();
 		return () => {
 			cancelled = true;
+			clearInterval(wetterTakt);
+			wetterAufraeumen?.();
 			map?.remove();
 		};
 	});
@@ -132,6 +143,25 @@
 <div class="map" bind:this={element}></div>
 
 <style>
+	/* Beschriftung der Planquadrate – global, weil Leaflet die Tooltips
+	   außerhalb dieser Komponente in den Kartencontainer hängt. */
+	:global(.planquadrat-nummer) {
+		background: none;
+		border: 0;
+		box-shadow: none;
+		padding: 0;
+		color: #e30613;
+		font-size: 10px;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+	:global(.planquadrat-nummer::before) {
+		display: none;
+	}
+	:global(.planquadrat-nummern-aus .planquadrat-nummer) {
+		display: none;
+	}
+
 	.map {
 		position: absolute;
 		inset: 0;
