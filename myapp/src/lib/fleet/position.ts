@@ -17,13 +17,7 @@ export function parsePosition(payload: string): ParsedPosition | null {
 		),
 	);
 	return result
-		? {
-				...result,
-				// Der Tracker schickt den Namen mit: {"name":"Fahrzeug 1","lat":…,"lon":…}
-				name: typeof data.name === 'string' && data.name.trim() ? data.name.trim() : undefined,
-				speed: data.speed ?? data.velocity,
-				timestamp: data.timestamp ?? data.time,
-			}
+		? { ...result, speed: data.speed ?? data.velocity, timestamp: data.timestamp ?? data.time }
 		: null;
 }
 function valid(lat: number, lng: number): Pick<RoutePoint, 'lat' | 'lng'> | null {
@@ -54,4 +48,102 @@ export function calculatedSpeed(points: RoutePoint[]): number | null {
 	if (seconds <= 0 || distance < 3) return 0;
 	const speed = (distance / seconds) * 3.6;
 	return speed <= 180 ? speed : null;
+}
+
+/* ─────────────────────────── Koppelnavigation ─────────────────────────── */
+
+/**
+ * Rechtweisender Kurs von einem Punkt zum nächsten, in Grad (0 = Nord).
+ * Anfangspeilung der Großkreisstrecke – auf Bodensee-Entfernungen praktisch
+ * dasselbe wie eine Kartenpeilung, aber ohne Sonderfall an den Polen.
+ */
+export function kursGrad(
+	von: Pick<RoutePoint, 'lat' | 'lng'>,
+	nach: Pick<RoutePoint, 'lat' | 'lng'>,
+): number {
+	const bogen = (wert: number) => (wert * Math.PI) / 180;
+	const deltaLng = bogen(nach.lng - von.lng);
+	const lat1 = bogen(von.lat);
+	const lat2 = bogen(nach.lat);
+	const y = Math.sin(deltaLng) * Math.cos(lat2);
+	const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
+	return (((Math.atan2(y, x) * 180) / Math.PI) + 360) % 360;
+}
+
+/** Zielpunkt aus Startpunkt, Kurs und Distanz. */
+export function zielpunkt(
+	start: Pick<RoutePoint, 'lat' | 'lng'>,
+	kurs: number,
+	meter: number,
+): { lat: number; lng: number } {
+	const bogen = (wert: number) => (wert * Math.PI) / 180;
+	const grad = (wert: number) => (wert * 180) / Math.PI;
+	const R = 6371000;
+	const d = meter / R;
+	const lat1 = bogen(start.lat);
+	const lng1 = bogen(start.lng);
+	const k = bogen(kurs);
+
+	const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(k));
+	const lng2 =
+		lng1 +
+		Math.atan2(
+			Math.sin(k) * Math.sin(d) * Math.cos(lat1),
+			Math.cos(d) - Math.sin(lat1) * Math.sin(lat2),
+		);
+
+	return { lat: grad(lat2), lng: ((grad(lng2) + 540) % 360) - 180 };
+}
+
+/** Unter dieser Fahrt gilt das Boot als liegend – GPS rauscht auch im Stand. */
+const MINDESTFAHRT_KMH = 2;
+
+/** Darüber ist etwas faul; ein Boot fährt keine 120 km/h. */
+const HOECHSTFAHRT_KMH = 120;
+
+export interface Prognose {
+	ziel: { lat: number; lng: number };
+	/** Rechtweisender Kurs in Grad. */
+	kurs: number;
+	/** Zugrunde gelegte Fahrt in km/h. */
+	fahrt: number;
+	/** Zurückgelegte Strecke im Vorhersagezeitraum, in Metern. */
+	meter: number;
+}
+
+/**
+ * Koppelnavigation: Wo ist das Boot in `sekunden`, wenn es Kurs und Fahrt
+ * beibehält?
+ *
+ * Kurs und Fahrt werden aus den letzten Positionen gerechnet, weil der
+ * Tracker beides nicht mitschickt. Das ist eine reine Fortschreibung – kein
+ * Kurswechsel, keine Strömung, kein Wind. Bei ruhiger Fahrt brauchbar, in
+ * einer Drehung wertlos.
+ *
+ * Gibt null zurück, wenn das Boot steht oder die Datenlage nicht reicht.
+ */
+export function prognose(punkte: RoutePoint[], sekunden = 600): Prognose | null {
+	if (punkte.length < 2) return null;
+
+	const jetzt = punkte.at(-1)!;
+
+	/*
+	 * Nicht nur die letzten zwei Punkte: eine einzelne Messung springt leicht
+	 * um ein paar Meter und dreht den Kurs dann um Dutzende Grad. Über die
+	 * letzten vier Punkte gemittelt bleibt die Linie ruhig.
+	 */
+	const fenster = punkte.slice(-4);
+	const start = fenster[0];
+
+	const sekundenGefahren = (jetzt.time - start.time) / 1000;
+	if (sekundenGefahren <= 0) return null;
+
+	const strecke = distanceMeters(start, jetzt);
+	const fahrt = (strecke / sekundenGefahren) * 3.6;
+	if (fahrt < MINDESTFAHRT_KMH || fahrt > HOECHSTFAHRT_KMH) return null;
+
+	const kurs = kursGrad(start, jetzt);
+	const meter = (fahrt / 3.6) * sekunden;
+
+	return { ziel: zielpunkt(jetzt, kurs, meter), kurs, fahrt, meter };
 }

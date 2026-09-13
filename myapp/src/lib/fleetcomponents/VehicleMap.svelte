@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import type { CircleMarker, Map as LeafletMap, Marker, Polyline } from 'leaflet';
 	import type { RoutePoint, Vehicle } from '$lib/fleet/types';
+	import { prognose } from '$lib/fleet/position';
 	import { wetterUmschalter, ebenenAktualisieren } from '$lib/fleet/wetter';
 	let {
 		vehicles,
@@ -11,6 +12,7 @@
 		zoom = null,
 		routePoints = [],
 		showRoute = false,
+		vorhersageSekunden = 600,
 	}: {
 		vehicles: Vehicle[];
 		selectedId: string;
@@ -19,6 +21,8 @@
 		zoom?: number | null;
 		routePoints?: RoutePoint[];
 		showRoute?: boolean;
+		/** Zeitraum der Koppelnavigation; 0 schaltet sie ab. */
+		vorhersageSekunden?: number;
 	} = $props();
 	let element: HTMLDivElement,
 		map: LeafletMap | undefined,
@@ -26,6 +30,8 @@
 		wetterAufraeumen: (() => void) | undefined,
 		wetterTakt: ReturnType<typeof setInterval> | undefined,
 		routeLine: Polyline | undefined,
+		vorhersageLinie: Polyline | undefined,
+		vorhersagePunkt: CircleMarker | undefined,
 		userMarker: CircleMarker | undefined;
 	const markers = new Map<string, Marker>();
 	function icon(v: Vehicle) {
@@ -69,6 +75,60 @@
 				{ color: '#e30613', weight: 5, opacity: 0.9, lineJoin: 'round' },
 			).addTo(map);
 	}
+	/**
+	 * Koppelnavigation: schwarze Linie vom aktuellen Ort zu dem Punkt, an dem
+	 * das Boot bei gleichbleibendem Kurs und gleichbleibender Fahrt in
+	 * `vorhersageSekunden` wäre, mit einem Punkt am Ende.
+	 */
+	function syncVorhersage(): void {
+		if (!map || !L) return;
+
+		vorhersageLinie?.remove();
+		vorhersagePunkt?.remove();
+		vorhersageLinie = undefined;
+		vorhersagePunkt = undefined;
+
+		if (!vorhersageSekunden) return;
+
+		const p = prognose(routePoints, vorhersageSekunden);
+		if (!p) return;
+
+		const jetzt = routePoints.at(-1)!;
+		const minuten = Math.round(vorhersageSekunden / 60);
+		const beschriftung =
+			`Position in ${minuten} min bei gleichem Kurs<br>` +
+			`Kurs ${Math.round(p.kurs)}°, ${p.fahrt.toFixed(1)} km/h, ` +
+			`${(p.meter / 1000).toFixed(1)} km`;
+
+		vorhersageLinie = L.polyline(
+			[
+				[jetzt.lat, jetzt.lng],
+				[p.ziel.lat, p.ziel.lng],
+			],
+			{
+				color: '#000',
+				weight: 2,
+				opacity: 0.85,
+				// Gestrichelt, damit die Vorhersage nicht wie die gefahrene
+				// Route aussieht – die ist rot und durchgezogen.
+				dashArray: '6 5',
+				lineCap: 'round',
+			},
+		)
+			.addTo(map)
+			.bindPopup(beschriftung);
+
+		vorhersagePunkt = L.circleMarker([p.ziel.lat, p.ziel.lng], {
+			radius: 4,
+			color: '#000',
+			weight: 2,
+			fillColor: '#000',
+			fillOpacity: 1,
+		})
+			.addTo(map)
+			.bindPopup(beschriftung);
+	}
+
 	export function focus(id: string): void {
 		const v = vehicles.find((x) => x.id === id);
 		if (v && hasPosition(v) && map) {
@@ -109,6 +169,11 @@
 		showRoute;
 		syncRoute();
 	});
+	$effect(() => {
+		routePoints;
+		vorhersageSekunden;
+		syncVorhersage();
+	});
 	onMount(() => {
 		let cancelled = false;
 		void (async () => {
@@ -130,6 +195,7 @@
 			wetterTakt = setInterval(() => map && ebenenAktualisieren(map), 5 * 60_000);
 			sync();
 			syncRoute();
+			syncVorhersage();
 		})();
 		return () => {
 			cancelled = true;
