@@ -56,7 +56,7 @@ export const WETTEREBENEN: WetterEbene[] = [
 	{
 		name: 'Planquadrate Bodensee',
 		layer: 'planquadrate_bodensee',
-		deckkraft: 0.5,
+		deckkraft: 0.3,
 		wms: TG_WMS,
 		quelle: QUELLE_TG,
 		standard: true
