@@ -16,7 +16,7 @@ import type { Map as LeafletMap, Control, Layer, TileLayer } from 'leaflet';
  * trotzdem bedienbar – ein WMS-Layer, der nichts liefert, ist einfach leer.
  */
 
-const DWD_WMS = 'https://maps.dwd.de/geoproxy/wms';
+const DWD_WMS = 'https://maps.dwd.de/geoserver/dwd/wms';
 
 /** Kanton Thurgau, Amt für Geoinformation – Planquadrate des Bodensees. */
 const TG_WMS = 'https://ows.geo.tg.ch/geofy_access_proxy/planquadrate_bodensee';
@@ -63,8 +63,6 @@ export const WETTEREBENEN: WetterEbene[] = [
 	},
 	{ name: 'Niederschlagsradar', layer: 'dwd:Niederschlagsradar', deckkraft: 0.65 },
 	{ name: 'Unwetterwarnungen', layer: 'dwd:Warnungen_Gemeinden_vereinigt', deckkraft: 0.45 },
-	{ name: 'Wind 10 m', layer: 'dwd:ICON_D2_10m_Windgeschwindigkeit', deckkraft: 0.5 },
-	{ name: 'Temperatur 2 m', layer: 'dwd:ICON_D2_2m_Temperatur', deckkraft: 0.5 }
 ];
 
 /**
