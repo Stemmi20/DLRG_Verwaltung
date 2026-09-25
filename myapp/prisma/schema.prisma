@@ -361,3 +361,45 @@ model bootstagebuchDienstangabe {
 
     @@index([tagebuchId, position])
 }
+
+/// Eine Stärkemeldung zu einem Einsatz.
+///
+/// Die Zahlen 1/2/9/12 werden NICHT gespeichert, sondern aus den
+/// zugeordneten Kräften plus den Zusatzzahlen berechnet. So können
+/// Namensliste und Stärkemeldung nie auseinanderlaufen.
+model personalstaerke {
+    id Int @id @default(autoincrement())
+
+    /// Datum und Uhrzeit des Einsatzes.
+    einsatzZeit DateTime
+    stichwort   String?
+    einsatzort  String?
+
+    /// Kräfte, die nicht in der Mitgliederverwaltung stehen –
+    /// Nachbarortsgruppen, andere Organisationen, Gäste.
+    zugFuehrer      Int @default(0)
+    GruppenFuehrer Int @default(0)
+    mannschaft   Int @default(0)
+
+    gemeldetVonId   String
+    gemeldetVonName String
+    bemerkung       String?
+    angelegtAm      DateTime @default(now())
+
+    kraefte einsatzkraft[]
+
+    @@index([einsatzZeit])
+}
+
+model einsatzkraft {
+    id        Int             @id @default(autoincrement())
+    meldungId Int
+    meldung   personalstaerke @relation(fields: [meldungId], references: [id], onDelete: Cascade)
+
+    userId String
+    name   String
+    /// "fuehrer" | "unterfuehrer" | "mannschaft"
+    funktion String
+
+    @@unique([meldungId, userId])
+}

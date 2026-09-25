@@ -36,11 +36,11 @@
 				<span class="text-sm text-lvs-grau"></span>
 			</a>
 			<a
-				href="/"
+				href="/personalstaerke"
 				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors disabled bg-dark"
 			>
 				<span class="font-display text-2xl font-600 uppercase block">Personalstärke</span>
-				<span class="text-sm text-lvs-grau"></span>
+				<span class="text-sm text-lvs-grau">Eingabe von Personalstärkee</span>
 			</a>
 		</nav>
 		<div class="lvs-panel p-4 grid gap-3 bg-lvs-wasser">
