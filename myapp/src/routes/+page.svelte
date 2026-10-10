@@ -94,7 +94,7 @@
 				<span class="text-sm text-lvs-grau">Übersicht von Aufgaben der RWS</span>
 			</a>
 		</nav>
-		<div class="lvs-panel p-4 grid gap-3 bg-green-9">
+		<div class="lvs-panel p-4 grid gap-3 bg-green-7">
 			<span>
 				<span class="font-display text-2xl font-600 uppercase block flex justify-center"
 					>Ausbildung</span
@@ -110,8 +110,8 @@
 				<span class="text-sm text-lvs-grau">Übersicht von Aufgaben der RWS</span>
 			</a>
 			<a
-				href="/"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors disabled bg-dark"
+				href="/kfausb"
+				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors bg-green-9"
 			>
 				<span class="font-display text-2xl font-600 uppercase block">Kraftfahrer Ausbildung</span>
 				<span class="text-sm text-lvs-grau">Übersicht von Aufgaben der RWS</span>
