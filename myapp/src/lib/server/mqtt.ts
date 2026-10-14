@@ -23,8 +23,13 @@ import { gespeicherteFahrzeuge, positionSpeichern } from './trackerspeicher';
 
 import { MQTT_BROKER, MQTT_BENUTZER, MQTT_PASSWORT } from '$env/static/private';
 
-/** Wildcard: fängt tracker/3941/position genauso wie weitere Geräte. */
-const TOPIC = 'tracker/3941/position';
+/**
+ * Wildcard: fängt tracker/3941/position, tracker/3911/position,
+ * tracker/3931/position, tracker/3943/position – und jedes weitere Gerät,
+ * das nach demselben Schema sendet. Welche davon auf der Karte erscheinen,
+ * legt die Liste in $lib/fleet/defaults.ts fest.
+ */
+const TOPIC = 'tracker/+/position';
 
 const bus = new EventEmitter();
 bus.setMaxListeners(0);

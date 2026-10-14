@@ -9,13 +9,14 @@
 	import AppIcon from '$lib/fleetcomponents/AppIcon.svelte';
 	import { distanceMeters, calculatedSpeed } from '$lib/fleet/position';
 	import type { Fahrzeug, TrackerEvent } from '$lib/types/tracker';
-	import { appConfig, defaultVehicles } from '$lib/fleet/defaults';
+	import { appConfig, defaultVehicles, ALTE_ID_3941 } from '$lib/fleet/defaults';
 	import {
 		loadVehicleData,
 		saveVehicleData,
 		loadRouteHistory,
 		saveRouteHistory,
 		pruneRoute,
+		type RouteMap,
 	} from '$lib/fleet/fleetStorage';
 	import type {
 		AppView,
@@ -33,11 +34,8 @@
 
 	let vehicles = $state<Vehicle[]>(defaultVehicles.map((v) => ({ ...v })));
 	let selectedId = $state(defaultVehicles[0]?.id ?? '');
-	/**
-	 * Aus tracker/<id>/position wird die ID gelesen: der Server liefert alle
-	 * Tracker, dieses Board zeigt nur seinen eigenen.
-	 */
-	const trackerId = config.topic.split('/')[1] ?? '';
+	/** Nur Tracker, die in $lib/fleet/defaults.ts stehen, kommen auf die Karte. */
+	const bekannt = new Set(defaultVehicles.map((v) => v.id));
 
 	let connection = $state<ConnectionStatus>('connecting'),
 		connectionText = $state('Verbindet …'),
@@ -45,8 +43,7 @@
 		lastUpdate = $state('Noch keine Live-Position'),
 		lastConnection = $state('Noch keine Verbindung'),
 		connectionLog = $state<ConnectionLogEntry[]>([]),
-		gpsHistory = $state<RoutePoint[]>([]),
-		routePoints = $state<RoutePoint[]>([]),
+		routen = $state<RouteMap>({}),
 		showRoute = $state(false),
 		mapSheetOpen = $state(false);
 
@@ -54,6 +51,12 @@
 	 * Die Ansicht steht in der URL. Dadurch kann die Navbar im Layout sie
 	 * setzen, ohne dass beide Komponenten eine eigene Kopie führen.
 	 */
+	/** Die letzten Punkte je Fahrzeug – nur für die Geschwindigkeit. */
+	const gpsHistory: Record<string, RoutePoint[]> = {};
+
+	/** Karte und Zähler zeigen die Strecke des gewählten Fahrzeugs. */
+	const routePoints = $derived(routen[selectedId] ?? []);
+
 	const view = $derived(($page.url.searchParams.get('view') as AppView) ?? 'home');
 
 	function zeige(ansicht: AppView): Promise<void> {
@@ -97,7 +100,7 @@
 		].slice(0, 30);
 	}
 	function apply(f: Fahrzeug): void {
-		if (trackerId && trackerId !== '+' && f.id !== trackerId) return;
+		if (!bekannt.has(f.id)) return;
 
 		// spur[0] ist die neueste Position, siehe $lib/types/tracker.
 		const aktuell = f.spur[0];
@@ -109,15 +112,17 @@
 			lng: aktuell.lng,
 			time: Number.isFinite(parsedTime) ? parsedTime : Date.now(),
 		};
-		gpsHistory = [...gpsHistory, point].slice(-5);
-		routePoints = pruneRoute(routePoints);
-		if (!routePoints.length || distanceMeters(routePoints.at(-1)!, point) >= 8) {
-			routePoints = pruneRoute([...routePoints, point]);
-			saveRouteHistory(routePoints);
+		const verlauf = [...(gpsHistory[f.id] ?? []), point].slice(-5);
+		gpsHistory[f.id] = verlauf;
+
+		const strecke = pruneRoute(routen[f.id] ?? []);
+		if (!strecke.length || distanceMeters(strecke.at(-1)!, point) >= 8) {
+			routen = { ...routen, [f.id]: pruneRoute([...strecke, point]) };
+			saveRouteHistory(routen);
 		}
 		// Liefert der Tracker eine Geschwindigkeit, hat sie Vorrang vor der
 		// aus den letzten Punkten gerechneten.
-		const computed = aktuell.speed ?? calculatedSpeed(gpsHistory);
+		const computed = aktuell.speed ?? calculatedSpeed(verlauf);
 		const speed = computed === null ? 'Unplausibel' : `${computed.toFixed(1)} km/h`;
 		const stamp = new Date(point.time).toLocaleString('de-DE', {
 			day: '2-digit',
@@ -127,9 +132,9 @@
 			minute: '2-digit',
 			second: '2-digit',
 		});
-		// Die Live-Position landet auf dem ersten Fahrzeug der Liste.
-		vehicles = vehicles.map((v, i) =>
-			i
+		// Die Live-Position landet auf dem Fahrzeug mit der Tracker-ID.
+		vehicles = vehicles.map((v) =>
+			v.id !== f.id
 				? v
 				: {
 						...v,
@@ -148,13 +153,16 @@
 	}
 	onMount(() => {
 		const stored = loadVehicleData();
+		// Bisher hieß das einzige Fahrzeug 'fahrzeug-1' – dessen Ausrüstung,
+		// Wartung usw. gehören jetzt zu Tracker 3941.
+		if (stored[ALTE_ID_3941] && !stored['3941']) stored['3941'] = stored[ALTE_ID_3941];
 		vehicles = vehicles.map((vehicle) => ({
 			...vehicle,
 			...(stored[vehicle.id] ?? {}),
 			loadout: stored[vehicle.id]?.loadout ?? vehicle.loadout ?? [],
 			standardCrew: stored[vehicle.id]?.standardCrew ?? vehicle.standardCrew ?? [],
 		}));
-		routePoints = loadRouteHistory();
+		routen = loadRouteHistory('3941');
 		/*
 		 * Die Positionen kommen über Server-Sent Events von /api/tracker/stream.
 		 * Der Server hält die MQTT-Verbindung samt Zugangsdaten – im Browser

@@ -56,10 +56,22 @@ export function pruneRoute(points: RoutePoint[], now = Date.now()): RoutePoint[]
 		.sort((a, b) => a.time - b.time);
 }
 
-export function loadRouteHistory(): RoutePoint[] {
-	return pruneRoute(read<RoutePoint[]>(ROUTE_KEY, []));
+/** Strecken aller Fahrzeuge, je Fahrzeug-ID die letzten 24 Stunden. */
+export type RouteMap = Record<string, RoutePoint[]>;
+
+/**
+ * Bis zur Umstellung auf mehrere Fahrzeuge lag unter ROUTE_KEY eine einzige
+ * Liste. Die wird beim Lesen dem Fahrzeug `alteId` zugeschlagen.
+ */
+export function loadRouteHistory(alteId = ''): RouteMap {
+	const roh = read<RouteMap | RoutePoint[]>(ROUTE_KEY, {});
+	const karte: RouteMap = Array.isArray(roh) ? (alteId ? { [alteId]: roh } : {}) : roh;
+	return Object.fromEntries(Object.entries(karte).map(([id, punkte]) => [id, pruneRoute(punkte)]));
 }
-export function saveRouteHistory(points: RoutePoint[]): void {
-	write(ROUTE_KEY, pruneRoute(points));
+export function saveRouteHistory(routes: RouteMap): void {
+	write(
+		ROUTE_KEY,
+		Object.fromEntries(Object.entries(routes).map(([id, punkte]) => [id, pruneRoute(punkte)])),
+	);
 }
 import type { RoutePoint, StoredVehicleMap, Vehicle } from './types';

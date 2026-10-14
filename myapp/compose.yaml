@@ -1,0 +1,11 @@
+services:
+  verwaltung:
+    build: .
+    container_name: dlrg-verwaltung
+    network_mode: host
+    env_file: .env
+    environment:
+      PORT: "3002"
+      HOST: "127.0.0.1"
+      ORIGIN: "https://dlrg.stemm1.org"
+    restart: unless-stopped
