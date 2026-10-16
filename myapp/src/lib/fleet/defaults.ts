@@ -48,3 +48,7 @@ export const defaultVehicles: Vehicle[] = TRACKER.map((t) => ({
 
 /** Unter dieser ID lag das eine Fahrzeug bisher – für die Übernahme alter Daten. */
 export const ALTE_ID_3941 = 'fahrzeug-1';
+
+export function istBoot(v: Pick<Vehicle, 'id'>): boolean {
+	return /94\d$/.test(v.id);
+}
