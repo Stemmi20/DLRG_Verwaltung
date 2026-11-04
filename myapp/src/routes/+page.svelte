@@ -73,8 +73,8 @@
 				<span class="text-sm text-lvs-grau">Verwaltung von Quallifikationen und Rollen</span>
 			</a>
 			<a
-				href="/"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors disabled bg-dark"
+				href="/aufgaben"
+				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors bg-blue-9"
 			>
 				<span class="font-display text-2xl font-600 uppercase block">RWS Aufgaben</span>
 				<span class="text-sm text-lvs-grau">Übersicht von Aufgaben der RWS</span>

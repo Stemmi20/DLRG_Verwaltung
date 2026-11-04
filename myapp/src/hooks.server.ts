@@ -9,7 +9,8 @@ starteMqtt();
 
 // Alles unter diesen Pfaden erfordert eine Anmeldung
 const GESCHUETZT = [
-	'/boteinsatzgruppe', //  '/admin', '/fleetmanager', '/kfausb', '/fahrtenbuch'
+	'/boteinsatzgruppe',
+	'/aufgaben', //  '/admin', '/fleetmanager', '/kfausb', '/fahrtenbuch'
 ];
 
 export const handle: Handle = async ({ event, resolve }) => {

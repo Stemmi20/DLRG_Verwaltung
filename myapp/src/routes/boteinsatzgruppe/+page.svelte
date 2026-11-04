@@ -220,6 +220,17 @@
 									class={feldKlassen}
 								/>
 							</div>
+							<div class="flex flex-col">
+								<label for="zweitOrtsgruppe" class="mb-1">Zweite Ortsgruppe</label>
+								<input
+									id="zweitOrtsgruppe"
+									name="zweitOrtsgruppe"
+									type="text"
+									value={user.zweitOrtsgruppe ?? ''}
+									disabled={!edit}
+									class={feldKlassen}
+								/>
+							</div>
 						</div>
 					</section>
 
