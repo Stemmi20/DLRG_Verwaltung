@@ -2,6 +2,7 @@ import { ObjectId, type Filter } from 'mongodb';
 import { db } from './database';
 import { collection as benutzer } from './usedata';
 import {
+	BEREICHE,
 	FILTER,
 	FREI,
 	KURZ_MAX,
@@ -25,6 +26,8 @@ export interface AufgabeDoc {
 	aufgabenID: number;
 	kurzDescr: string;
 	langDescr: string;
+	/** Einer der Einträge aus BEREICHE. Bot-Aufgaben haben ihn evtl. nicht. */
+	bereich?: string;
 	ortsgruppe: string;
 	status: AufgabeStatus;
 	/** Telegram-ID dessen, der sie gerade bearbeitet (so kennt ihn der Bot). */
@@ -159,6 +162,7 @@ export async function liste(ich: Handelnder, filter: FilterName): Promise<Aufgab
 			aufgabenID: d.aufgabenID,
 			kurz: d.kurzDescr ?? '',
 			lang: d.langDescr ?? '',
+			bereich: d.bereich?.trim() || null,
 			status,
 			bearbeiter,
 			meine,
@@ -175,10 +179,18 @@ export async function liste(ich: Handelnder, filter: FilterName): Promise<Aufgab
 
 // --------------------------------------------------------------- Schreiben
 
-export async function erstellen(ich: Handelnder, kurz: string, lang: string): Promise<Ergebnis> {
+export async function erstellen(
+	ich: Handelnder,
+	bereich: string,
+	kurz: string,
+	lang: string,
+): Promise<Ergebnis> {
 	kurz = kurz.trim();
 	lang = lang.trim();
 	if (!ich.ortsgruppe) return { ok: false, fehler: 'Deinem Konto ist keine Ortsgruppe zugeordnet.' };
+	if (!(BEREICHE as readonly string[]).includes(bereich)) {
+		return { ok: false, fehler: 'Bitte einen Bereich auswählen.' };
+	}
 	if (!kurz) return { ok: false, fehler: 'Bitte einen Titel angeben.' };
 	if (kurz.length > KURZ_MAX) return { ok: false, fehler: `Der Titel darf höchstens ${KURZ_MAX} Zeichen haben.` };
 	if (lang.length > LANG_MAX) return { ok: false, fehler: `Die Beschreibung ist zu lang.` };
@@ -188,6 +200,7 @@ export async function erstellen(ich: Handelnder, kurz: string, lang: string): Pr
 		aufgabenID: jetzt,
 		kurzDescr: kurz,
 		langDescr: lang,
+		bereich,
 		ortsgruppe: ich.ortsgruppe,
 		status: 'OPEN',
 		log: { [String(jetzt)]: `Benutzer ${ich.name} hat die Aufgabe über die Webseite erstellt` },

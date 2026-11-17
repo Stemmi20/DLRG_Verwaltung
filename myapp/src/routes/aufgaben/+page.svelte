@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { FILTER, KURZ_MAX, STATUS_TEXT, zeitDe, type FilterName } from '$lib/aufgaben';
+	import { BEREICHE, FILTER, KURZ_MAX, STATUS_TEXT, zeitDe, type FilterName } from '$lib/aufgaben';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -13,6 +13,7 @@
 			aufgabenID?: number | null;
 			erstellt?: boolean;
 			formular?: boolean;
+			bereich?: string;
 			kurz?: string;
 			lang?: string;
 		} | null,
@@ -89,6 +90,15 @@
 			<form method="POST" action="?/erstellen" class="panel neu" use:enhance={senden('neu')}>
 				<h2>Neue Aufgabe</h2>
 				<label>
+					<span>Bereich</span>
+					<select name="bereich" required value={antwort?.bereich ?? ''}>
+						<option value="" disabled>Bitte auswählen …</option>
+						{#each BEREICHE as b (b)}
+							<option value={b}>{b}</option>
+						{/each}
+					</select>
+				</label>
+				<label>
 					<span>Titel</span>
 					<input
 						name="kurz"
@@ -142,6 +152,7 @@
 						<span class="pille">{a.meine ? 'Dir zugewiesen' : STATUS_TEXT[a.status]}</span>
 						<small class="zeit">erstellt {zeitDe(a.erstelltAm)}</small>
 					</div>
+					{#if a.bereich}<p class="bereich">{a.bereich}</p>{/if}
 					<h3>{a.kurz}</h3>
 					{#if a.lang && a.lang !== a.kurz}<p class="text">{a.lang}</p>{/if}
 
@@ -217,6 +228,7 @@
 		--wasser: #0090d4;
 		--gruen: #35b27a;
 
+		color-scheme: dark;
 		min-height: calc(100dvh - var(--navbar-hoehe, 0px));
 		padding: 28px 16px 56px;
 		background: var(--nacht);
@@ -355,6 +367,7 @@
 		letter-spacing: 0.12em;
 	}
 	.neu input,
+	.neu select,
 	.neu textarea {
 		width: 100%;
 		padding: 11px 13px;
@@ -369,6 +382,7 @@
 		resize: vertical;
 	}
 	.neu input:focus,
+	.neu select:focus,
 	.neu textarea:focus {
 		border-color: var(--wasser);
 		outline: none;
@@ -508,6 +522,15 @@
 	.zeit {
 		color: var(--grau);
 		font-size: 12px;
+	}
+	.bereich {
+		margin: 0;
+		color: var(--wasser);
+		font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+		font-size: 15px;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
 	}
 	h3 {
 		margin: 0;

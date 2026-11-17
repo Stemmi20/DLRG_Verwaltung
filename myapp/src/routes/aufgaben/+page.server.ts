@@ -58,12 +58,13 @@ export const actions: Actions = {
 	erstellen: async ({ request, locals, url }) => {
 		const ich = await handelnder(locals, url.pathname);
 		const f = await request.formData();
+		const bereich = String(f.get('bereich') ?? '');
 		const kurz = String(f.get('kurz') ?? '');
 		const lang = String(f.get('lang') ?? '');
-		const r = await erstellen(ich, kurz, lang);
+		const r = await erstellen(ich, bereich, kurz, lang);
 		return r.ok
 			? { erstellt: true }
-			: fail(400, { fehler: r.fehler, aufgabenID: null, kurz, lang, formular: true });
+			: fail(400, { fehler: r.fehler, aufgabenID: null, bereich, kurz, lang, formular: true });
 	},
 	uebernehmen: ({ request, locals, url }) => mitAufgabe(request, locals, url.pathname, uebernehmen),
 	abgeben: ({ request, locals, url }) => mitAufgabe(request, locals, url.pathname, abgeben),

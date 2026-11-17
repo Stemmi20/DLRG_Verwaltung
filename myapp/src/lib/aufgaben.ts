@@ -26,6 +26,25 @@ export const FILTER = {
 } as const satisfies Record<string, { text: string; status: readonly AufgabeStatus[] }>;
 export type FilterName = keyof typeof FILTER;
 
+/**
+ * Wofür die Aufgabe ist – Pflichtauswahl beim Anlegen.
+ * Neuer Eintrag = eine Zeile ergänzen. Gespeichert wird der Text so, wie er
+ * hier steht, im Feld `bereich`.
+ */
+export const BEREICHE = [
+	'3/94-1 Hugo',
+	'3/94-2 FP',
+	'3/94-3 Brig',
+	'3/19-1 MTW',
+	'1/11-1 ELW',
+	'3/91-1 GW-W',
+	'3/93-1 BGF',
+	'1/94-1 HWB',
+	'SR / Neopren Material',
+	'Wachstation (Lampen, Türen, etc.)',
+	'Sonstiges',
+] as const;
+
 export const KURZ_MAX = 120;
 export const LANG_MAX = 4000;
 
@@ -34,6 +53,8 @@ export interface AufgabeAnsicht {
 	aufgabenID: number;
 	kurz: string;
 	lang: string;
+	/** Fehlt bei Aufgaben, die der Bot ohne Bereich angelegt hat. */
+	bereich: string | null;
 	status: AufgabeStatus;
 	/** Vor- und Nachname, falls jemand sie übernommen hat. */
 	bearbeiter: string | null;

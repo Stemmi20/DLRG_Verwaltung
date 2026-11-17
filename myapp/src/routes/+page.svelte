@@ -1,122 +1,48 @@
 <script lang="ts">
-	function zeit(iso: string): string {
-		return new Date(iso).toLocaleString('de-DE', {
-			day: '2-digit',
-			month: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit',
-		});
-	}
+	import { MENUE, type Bereich } from '$lib/navigation';
+
+	/*
+	 * Die Kacheln kommen aus $lib/navigation.ts – dieselbe Liste wie die
+	 * Navigationsleiste links. Die Farbklassen stehen hier ausgeschrieben,
+	 * damit UnoCSS sie findet.
+	 */
+	const KOPF: Record<Bereich['farbe'], string> = {
+		rot: 'bg-lvs-rot',
+		blau: 'bg-lvs-wasser',
+		gruen: 'bg-green-7',
+	};
+	const KACHEL: Record<Bereich['farbe'], string> = {
+		rot: 'bg-red-9',
+		blau: 'bg-blue-9',
+		gruen: 'bg-green-9',
+	};
 </script>
 
 <div class="min-h-dvh bg-lvs-nacht text-lvs-eis font-body p-4 lg:p-8">
-	<div class="max-w-4xl mx-auto grid gap-6 ">
-
-			
-		<div class="lvs-panel p-4 grid gap-3 bg-lvs-rot">
-			<span>
-				<span class="font-display text-2xl font-600 uppercase block flex justify-center"
-					>Einsatz</span
-				>
-			</span>
-		</div>
-		<nav class="grid gap-3 sm:grid-cols-2">
-			<a
-				href="/fleetmanager"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors bg-red-9"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Flotten Manager</span>
-				<span class="text-sm text-lvs-grau">Lokalisierung von Einstzfahrzeugen</span>
-			</a>
-			<a
-				href="/"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors disabled bg-dark"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Einsatzprotokoll</span>
-				<span class="text-sm text-lvs-grau"></span>
-			</a>
-			<a
-				href="/personalstaerke"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors disabled bg-dark"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Personalstärke</span>
-				<span class="text-sm text-lvs-grau">Eingabe von Personalstärkee</span>
-			</a>
-		</nav>
-		<div class="lvs-panel p-4 grid gap-3 bg-lvs-wasser">
-			<span>
-				<span class="font-display text-2xl font-600 uppercase block flex justify-center"
-					>Verwaltung</span
-				>
-			</span>
-		</div>
-		<nav class="grid gap-3 sm:grid-cols-2">
-			<a
-				href="/fahrtenbuch"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors bg-blue-9"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Fahrtenbuch</span>
-				<span class="text-sm text-lvs-grau">Verwaltung von Fahrten und Kilometerständen</span>
-			</a>
-			<a
-				href="/bootstagebuch"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors bg-blue-9"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Bootstagebuch</span>
-				<span class="text-sm text-lvs-grau">Verwaltung von Bootsfahrten</span>
-			</a>
-			<a
-				href="/boteinsatzgruppe"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors bg-blue-9"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Einsatzpersonal</span>
-				<span class="text-sm text-lvs-grau">Verwaltung von Quallifikationen und Rollen</span>
-			</a>
-			<a
-				href="/aufgaben"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors bg-blue-9"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">RWS Aufgaben</span>
-				<span class="text-sm text-lvs-grau">Übersicht von Aufgaben der RWS</span>
-			</a>
-			<a
-				href="/"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors disabled bg-dark"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Einsatzmaterial</span>
-				<span class="text-sm text-lvs-grau"></span>
-			</a>
-			<a
-				href="/"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors disabled bg-dark"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Verwaltung RWS</span>
-				<span class="text-sm text-lvs-grau">Übersicht von Aufgaben der RWS</span>
-			</a>
-		</nav>
-		<div class="lvs-panel p-4 grid gap-3 bg-green-7">
-			<span>
-				<span class="font-display text-2xl font-600 uppercase block flex justify-center"
-					>Ausbildung</span
-				>
-			</span>
-		</div>
-		<nav class="grid gap-3 sm:grid-cols-2">
-			<a
-				href="/"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors disabled bg-dark"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Bootsführer Ausbildung</span>
-				<span class="text-sm text-lvs-grau">Übersicht von Aufgaben der RWS</span>
-			</a>
-			<a
-				href="/kfausb"
-				class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors bg-green-9"
-			>
-				<span class="font-display text-2xl font-600 uppercase block">Kraftfahrer Ausbildung</span>
-				<span class="text-sm text-lvs-grau">Übersicht von Aufgaben der RWS</span>
-			</a>
-		</nav>
+	<div class="max-w-4xl mx-auto grid gap-6">
+		{#each MENUE as bereich (bereich.titel)}
+			<div class="lvs-panel p-4 grid gap-3 {KOPF[bereich.farbe]}">
+				<span class="font-display text-2xl font-600 uppercase block flex justify-center">{bereich.titel}</span>
+			</div>
+			<nav class="grid gap-3 sm:grid-cols-2" aria-label={bereich.titel}>
+				{#each bereich.punkte as p (p.titel)}
+					{#if p.href}
+						<a
+							href={p.href}
+							class="lvs-panel p-4 no-underline text-lvs-eis hover:border-lvs-wasser transition-colors {KACHEL[bereich.farbe]}"
+						>
+							<span class="font-display text-2xl font-600 uppercase block">{p.titel}</span>
+							<span class="text-sm text-lvs-grau">{p.beschreibung}</span>
+						</a>
+					{:else}
+						<span class="lvs-panel p-4 text-lvs-eis disabled bg-dark" aria-disabled="true">
+							<span class="font-display text-2xl font-600 uppercase block">{p.titel}</span>
+							<span class="text-sm text-lvs-grau">Kommt noch</span>
+						</span>
+					{/if}
+				{/each}
+			</nav>
+		{/each}
 	</div>
 </div>
 
